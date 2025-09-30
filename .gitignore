@@ -1,0 +1,71 @@
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ASP.NET
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+appsettings.json
+
+
+
+# EF Core Migrations (optional, if you regenerate them)
+Migrations/
+
+# Rider and VS Code
+.idea/
+.vscode/
+*.code-workspace
+
+# Logs
+*.log
+logs/
+log/
+
+# .NET Core tooling
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Coverage tools
+coverage/
+*.coverage
+*.coveragexml
+
+# Packages
+*.nupkg
+*.snupkg
+*.nuspec
+*.psmdcp
+packages/
+.nuget/
+
+# Visual Studio Cache/Config
+.vs/
+.vscode/
+.vsconfig
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# JetBrains Rider
+.idea/
+
+# EF Core tools files (safe to include)
+# You may want to include the Migrations folder if you're tracking schema changes
+# However, exclude the generated database snapshot if you regenerate it often
+# Migrations/*ModelSnapshot.cs
+
+# System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
