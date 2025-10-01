@@ -19,7 +19,7 @@ namespace automobile_backend.Controllers
             _authService = authService;
         }
 
-        [HttpPost("register")]
+        [HttpPost("register/v1")]
         public async Task<IActionResult> Register(UserRegisterDto request)
         {
             var user = await _authService.RegisterAsync(request);
@@ -30,7 +30,7 @@ namespace automobile_backend.Controllers
             return Ok(new { message = "Registration successful" });
         }
 
-        [HttpPost("login")]
+        [HttpPost("login/v1")]
         public async Task<IActionResult> Login(UserLoginDto request)
         {
             var token = await _authService.LoginAsync(request);
