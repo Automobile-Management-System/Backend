@@ -21,13 +21,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
         policy =>
         {
-            // ==> FIX: Add your actual frontend URL
-            policy.WithOrigins("")
+            // === FIX IS HERE ===
+            policy.WithOrigins("http://localhost:3000") // Add the frontend origin URL
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();
