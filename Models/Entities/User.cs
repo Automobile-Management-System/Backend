@@ -32,6 +32,6 @@
         public string? ProfilePicture { get; set; }
 
         [Required]
-        public Role Role { get; set; }
+        public Enums Role { get; set; }
     }
 }

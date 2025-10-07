@@ -39,7 +39,7 @@
                 Address = request.Address,
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt,
-                Role = Role.Customer // Default role for new registrations
+                Role = Enums.Customer // Default role for new registrations
             };
 
             return await _authRepository.CreateUserAsync(user);
