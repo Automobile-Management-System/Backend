@@ -24,6 +24,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICustomerDashboardRepository, CustomerDashboardRepository>();
 builder.Services.AddScoped<ICustomerDashboardService, CustomerDashboardService>();
 
+builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+
 
 builder.Services.AddCors(options =>
 {
