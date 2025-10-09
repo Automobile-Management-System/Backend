@@ -37,6 +37,9 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 // Register Notification & Alerts
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
+// Register AI Chatbot Service
+builder.Services.AddScoped<IChatbotService, ChatbotService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
