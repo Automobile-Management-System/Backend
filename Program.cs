@@ -34,6 +34,8 @@ builder.Services.AddScoped<IModificationRequestService, ModificationRequestServi
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 
+// Register Notification & Alerts
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddCors(options =>
 {
