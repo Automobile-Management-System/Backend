@@ -21,6 +21,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+builder.Services.AddScoped<ICustomerDashboardRepository, CustomerDashboardRepository>();
+builder.Services.AddScoped<ICustomerDashboardService, CustomerDashboardService>();
 
 
 builder.Services.AddCors(options =>
