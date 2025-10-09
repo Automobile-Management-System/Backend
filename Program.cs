@@ -30,6 +30,9 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IModificationRequestRepository, ModificationRequestRepository>();
 builder.Services.AddScoped<IModificationRequestService, ModificationRequestService>();
 
+builder.Services.AddScoped<IEmployeeServiceWorkRepository, EmployeeServiceWorkRepository>();
+builder.Services.AddScoped<IEmployeeServiceWorkService, EmployeeServiceWorkService>();
+
 // Register Payment & Billing System
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
