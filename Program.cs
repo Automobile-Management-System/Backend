@@ -33,6 +33,15 @@ builder.Services.AddScoped<IModificationRequestService, ModificationRequestServi
 builder.Services.AddScoped<IEmployeeServiceWorkRepository, EmployeeServiceWorkRepository>();
 builder.Services.AddScoped<IEmployeeServiceWorkService, EmployeeServiceWorkService>();
 
+builder.Services.AddScoped<IEmployeeManagementWorkRepository, EmployeeManagementWorkRepository>();
+builder.Services.AddScoped<IEmployeeManagementWorkService, EmployeeManagementWorkService>();
+
+builder.Services.AddScoped<IUserManagementRepository, UserManagementRepository>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+
+builder.Services.AddScoped<IServiceAnalyticsRepository, ServiceAnalyticsRepository>();
+builder.Services.AddScoped<IServiceAnalyticsService, ServiceAnalyticsService>();
+
 // Register Payment & Billing System
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
@@ -49,7 +58,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             // === FIX IS HERE ===
-            policy.WithOrigins("http://localhost:3000") // Add the frontend origin URL
+            policy.WithOrigins("") // Add the frontend origin URL
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();
@@ -112,7 +121,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Commenting this out for local development
 app.UseCors(MyAllowSpecificOrigins);
 app.UseAuthentication();
 app.UseAuthorization();
