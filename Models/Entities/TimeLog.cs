@@ -9,7 +9,10 @@ namespace automobile_backend.Models.Entities
         public int LogId { get; set; }
 
         [Required]
-        public DateTime DateTime { get; set; }
+        public DateTime StartDateTime { get; set; }
+
+        [Required]
+        public DateTime EndDateTime { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(5, 2)")]
