@@ -21,11 +21,9 @@
 
         public string? PhoneNumber { get; set; }
 
-        [Required]
-        public byte[] PasswordHash { get; set; } = new byte[32]; // For HashPassword
+        public byte[]? PasswordHash { get; set; }
 
-        [Required]
-        public byte[] PasswordSalt { get; set; } = new byte[32]; // Important for security
+        public byte[]? PasswordSalt { get; set; }
 
         public string? Address { get; set; }
 

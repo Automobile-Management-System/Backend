@@ -7,5 +7,7 @@ namespace automobile_backend.InterFaces.IServices
     {
         Task<User?> RegisterAsync(UserRegisterDto request);
         Task<string?> LoginAsync(UserLoginDto request);
+
+        Task<(User user, string jwtToken)> HandleGoogleLoginAsync();
     }
 }

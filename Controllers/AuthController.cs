@@ -7,6 +7,8 @@ namespace automobile_backend.Controllers
     using automobile_backend.Models.DTOs;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.Authentication;
+    using Microsoft.AspNetCore.Authentication.Google;
 
     [Route("api/[controller]")]
     [ApiController]
@@ -43,13 +45,57 @@ namespace automobile_backend.Controllers
             Response.Cookies.Append("jwt-token", token, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = false, 
+                Secure = false,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddDays(1)
             });
 
             return Ok(new { message = "Login successful" });
         }
+
+        [HttpGet("google-login")]
+        public IActionResult GoogleLogin()
+        {
+            // 1. CHANGE THIS
+            // This is the URL our API will redirect to *after* the
+            // /signin-google middleware callback is successful.
+            // It now points to our new handler action below.
+            var redirectUrl = Url.Action(nameof(GoogleSignInHandler));
+
+            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        // 2. RENAME THIS ACTION
+        // This action now has a unique path and will only run AFTER
+        // the /signin-google middleware has successfully created the external cookie.
+        [HttpGet("google-signin-handler")]
+        public async Task<IActionResult> GoogleSignInHandler()
+        {
+            try
+            {
+                // This logic is identical to your old GoogleCallback
+                var (user, jwtToken) = await _authService.HandleGoogleLoginAsync();
+
+                // Set our application's HttpOnly cookie
+                Response.Cookies.Append("jwt-token", jwtToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false, // Set to true in production (HTTPS)
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddDays(1)
+                });
+
+                // Redirect the user's browser back to the React app
+                return Redirect("http://localhost:3000/dashboard");
+            }
+            catch (Exception ex)
+            {
+                // Handle errors
+                return Redirect($"http://localhost:3000/login?error={Uri.EscapeDataString(ex.Message)}");
+            }
+        }
+
 
         [HttpPost("logout"), Authorize]
         public IActionResult Logout()
