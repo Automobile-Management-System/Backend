@@ -64,7 +64,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             // === FIX IS HERE ===
-            policy.WithOrigins("") // Add the frontend origin URL
+            policy.WithOrigins("http://localhost:3000") // Add the frontend origin URL
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();
