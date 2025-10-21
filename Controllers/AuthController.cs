@@ -56,19 +56,14 @@ namespace automobile_backend.Controllers
         [HttpGet("google-login")]
         public IActionResult GoogleLogin()
         {
-            // 1. CHANGE THIS
-            // This is the URL our API will redirect to *after* the
-            // /signin-google middleware callback is successful.
-            // It now points to our new handler action below.
+
             var redirectUrl = Url.Action(nameof(GoogleSignInHandler));
 
             var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
-        // 2. RENAME THIS ACTION
-        // This action now has a unique path and will only run AFTER
-        // the /signin-google middleware has successfully created the external cookie.
+
         [HttpGet("google-signin-handler")]
         public async Task<IActionResult> GoogleSignInHandler()
         {

@@ -17,7 +17,6 @@ namespace automobile_backend.Services
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        // FIX 1: Define the const here so it's visible inside this class.
         // This MUST match the string used in Program.cs
         private const string ExternalCookieAuthenticationScheme = "ExternalCookie";
 
