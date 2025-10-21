@@ -12,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
 const string MyAllowSpecificOrigins = "AllowFrontend";
-const string ExternalCookieAuthenticationScheme = "ExternalCookie"; // For Google Auth
+const string ExternalCookieAuthenticationScheme = "ExternalCookie"; // For Google Auth External Cookie
 
 // 1. Add services to the container.
 
@@ -130,15 +130,14 @@ builder.Services.AddAuthentication(options =>
 {
     options.ClientId = configuration["Google:ClientId"]!;
     options.ClientSecret = configuration["Google:ClientSecret"]!;
+   
     
-    // 1. CHANGE THIS PATH
+
     // This is the dedicated path the Google middleware will listen on.
-    // It should NOT match any controller action.
     options.CallbackPath = "/api/Auth/signin-google"; 
     
     options.SignInScheme = ExternalCookieAuthenticationScheme;
-    
-    // 2. MAKE COOKIE POLICY EXPLICIT
+
     // This ensures the correlation cookie is sent correctly
     options.CorrelationCookie.SameSite = SameSiteMode.Lax; 
     options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
@@ -165,7 +164,7 @@ if (app.Environment.IsDevelopment())
 // app.UseHttpsRedirection(); // Keep commented for local http development
 app.UseCors(MyAllowSpecificOrigins);
 
-app.UseAuthentication(); // <-- Important: Add this before UseAuthorization
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapControllers();
