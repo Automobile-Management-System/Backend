@@ -19,6 +19,7 @@ namespace automobile_backend.Models.Entities
         public decimal BasePrice { get; set; }
 
         // Navigation property for the many-to-many relationship
-        public ICollection<AppointmentService> AppointmentServices { get; set; }
+        // Make it nullable with ? to avoid validation issues
+        public ICollection<AppointmentService>? AppointmentServices { get; set; }
     }
 }

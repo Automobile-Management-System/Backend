@@ -18,6 +18,10 @@ namespace automobile_backend.Models.Entities
         [Required]
         public ModificationStatus Status { get; set; }
 
+        public string? AdminResponse { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         // Foreign Key for Appointment
         public int AppointmentId { get; set; }
 

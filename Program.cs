@@ -14,9 +14,15 @@ const string MyAllowSpecificOrigins = "AllowFrontend";
 
 // 1. Add services to the container.
 
+var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(conn))
+{
+    throw new InvalidOperationException("DefaultConnection not found in configuration.");
+}
+
 // ==> FIX: Add your DbContext to the services collection
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(conn));
 
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -52,13 +58,15 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 // Register AI Chatbot Service
 builder.Services.AddScoped<IChatbotService, ChatbotService>();
 
+builder.Services.AddScoped<IAddOnRepository, AddOnRepository>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
         policy =>
         {
             // === FIX IS HERE ===
-            policy.WithOrigins("") // Add the frontend origin URL
+            policy.WithOrigins("http://localhost:3000") // Add the frontend origin URL
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();

@@ -6,6 +6,7 @@ namespace automobile_backend.InterFaces.IServices
 {
     public interface IModificationRequestService
     {
-        Task<IEnumerable<ModificationRequest>> GetAllModificationRequestsAsync();
+        Task<IEnumerable<object>> GetAllModificationRequestsAsync();
+        Task<object?> ReviewModificationRequestAsync(int id, ReviewRequestDto reviewDto);
     }
 }
