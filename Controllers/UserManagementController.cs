@@ -1,8 +1,6 @@
 using automobile_backend.InterFaces.IServices;
-using automobile_backend.Models.Entities;
+using automobile_backend.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace automobile_backend.Controllers
 {
@@ -17,24 +15,55 @@ namespace automobile_backend.Controllers
             _service = service;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        // Add employee user
+        [HttpPost("add-employee")]
+        public async Task<IActionResult> AddEmployee([FromBody] UserRegisterDto dto)
         {
-            var users = await _service.GetUsersAsync();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var result = await _service.AddEmployeeAsync(dto);
+            return Ok(result);
+        }
+
+        // Get all users (summary)
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _service.GetAllUsersAsync();
             return Ok(users);
         }
 
+        // Get single user details
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<IActionResult> GetUserById(int id)
         {
             var user = await _service.GetUserByIdAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+            if (user == null) return NotFound();
             return Ok(user);
         }
 
+        // Update user
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateDto dto)
+        {
+            var updated = await _service.UpdateUserAsync(id, dto);
+            if (updated == null) return NotFound();
+            return Ok(updated);
+        }
 
+        // Activate user
+        [HttpPut("activate/{id}")]
+        public async Task<IActionResult> ActivateUser(int id)
+        {
+            var success = await _service.ActivateUserAsync(id);
+            return success ? Ok("User activated") : NotFound();
+        }
+
+        // Deactivate user
+        [HttpPut("deactivate/{id}")]
+        public async Task<IActionResult> DeactivateUser(int id)
+        {
+            var success = await _service.DeactivateUserAsync(id);
+            return success ? Ok("User deactivated") : NotFound();
+        }
     }
 }
