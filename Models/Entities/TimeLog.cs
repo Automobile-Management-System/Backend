@@ -8,17 +8,13 @@ namespace automobile_backend.Models.Entities
         [Key]
         public int LogId { get; set; }
 
-        [Required]
         public DateTime StartDateTime { get; set; }
 
-        [Required]
         public DateTime EndDateTime { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(5, 2)")]
         public decimal HoursLogged { get; set; }
-
-        public string? Notes { get; set; }
 
         // Foreign Key for Appointment
         public int AppointmentId { get; set; }

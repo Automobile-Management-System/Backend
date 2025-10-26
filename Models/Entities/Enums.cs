@@ -16,19 +16,20 @@
 
     public enum AppointmentStatus
     {
-        Scheduled,
+        Pending,
         InProgress,
         Completed,
         Cancelled,
-        PendingApproval
+        Rejected,
     }
 
     public enum ModificationStatus
     {
-        Requested,
-        Approved,
+        Pending,
+        InProgress,
+        Completed,
+        Cancelled,
         Rejected,
-        Completed
     }
 
     public enum PaymentMethod
@@ -37,5 +38,11 @@
         DebitCard,
         Cash,
         BankTransfer
+    }
+
+    public enum Type
+    {
+        Modifications,
+        Service 
     }
 }

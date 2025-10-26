@@ -29,7 +29,17 @@
 
         public string? ProfilePicture { get; set; }
 
+        public string? Status { get; set; }
+
         [Required]
         public Enums Role { get; set; }
+
+
+        // Navigation properties for relationships
+        public ICollection<CustomerVehicle> CustomerVehicles { get; set; }
+        public ICollection<Appointment> Appointments { get; set; }
+        public ICollection<TimeLog> TimeLogs { get; set; }
+        public ICollection<Report> Reports { get; set; }
+        public ICollection<EmployeeAppointment> EmployeeAppointments { get; set; }
     }
 }
