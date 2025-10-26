@@ -6,11 +6,13 @@ using automobile_backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models; // Add this for Swagger JWT support
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
+
 const string MyAllowSpecificOrigins = "AllowFrontend";
+const string ExternalCookieAuthenticationScheme = "ExternalCookie"; // For Google Auth External Cookie
 
 // 1. Add services to the container.
 
@@ -20,10 +22,14 @@ if (string.IsNullOrWhiteSpace(conn))
     throw new InvalidOperationException("DefaultConnection not found in configuration.");
 }
 
-// ==> FIX: Add your DbContext to the services collection
+// Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(conn));
 
+// ==> ADD THIS: Required to access HttpContext in services like AuthService
+builder.Services.AddHttpContextAccessor();
+
+// Register all your application services and repositories
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
@@ -58,25 +64,23 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 // Register AI Chatbot Service
 builder.Services.AddScoped<IChatbotService, ChatbotService>();
 
-builder.Services.AddScoped<IAddOnRepository, AddOnRepository>();
-
+// Configure CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
         policy =>
         {
-            // === FIX IS HERE ===
-            policy.WithOrigins("http://localhost:3000") // Add the frontend origin URL
+            policy.WithOrigins("http://localhost:3000") // Frontend origin
                   .AllowAnyHeader()
                   .AllowAnyMethod()
-                  .AllowCredentials();
+                  .AllowCredentials(); // Required for cookies
         });
 });
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// ==> Optional but recommended: Configure Swagger to use JWT
+// Configure Swagger to use JWT
 builder.Services.AddSwaggerGen(options =>
 {
     options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
@@ -88,31 +92,57 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 
-// 2. Configure JWT Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+// 2. Configure Authentication (UPDATED SECTION)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options => 
+{
+    // ... (your existing JWT config is fine) ...
+    options.Events = new JwtBearerEvents
     {
-        options.Events = new JwtBearerEvents
+        OnMessageReceived = context =>
         {
-            OnMessageReceived = context =>
-            {
-                context.Token = context.Request.Cookies["jwt-token"];
-                return Task.CompletedTask;
-            }
-        };
+            context.Token = context.Request.Cookies["jwt-token"];
+            return Task.CompletedTask;
+        }
+    };
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = configuration["Jwt:Issuer"],
+        ValidAudience = configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
+        ClockSkew = TimeSpan.Zero
+    };
+})
+.AddCookie(ExternalCookieAuthenticationScheme, options => 
+{
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+})
+.AddGoogle(options => 
+{
+    options.ClientId = configuration["Google:ClientId"]!;
+    options.ClientSecret = configuration["Google:ClientSecret"]!;
+   
+    
 
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = configuration["Jwt:Issuer"],
-            ValidAudience = configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
-            ClockSkew = TimeSpan.Zero
-        };
-    });
+    // This is the dedicated path the Google middleware will listen on.
+    options.CallbackPath = "/api/Auth/signin-google"; 
+    
+    options.SignInScheme = ExternalCookieAuthenticationScheme;
+
+    // This ensures the correlation cookie is sent correctly
+    options.CorrelationCookie.SameSite = SameSiteMode.Lax; 
+    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+});
+
 
 // 3. Configure Authorization Policies 
 builder.Services.AddAuthorization(options =>
@@ -121,17 +151,21 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Staff", policy => policy.RequireRole("Admin", "Employee"));
 });
 
+// 4. Build the application
 var app = builder.Build();
 
+// 5. Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// app.UseHttpsRedirection(); // Commenting this out for local development
+// app.UseHttpsRedirection(); // Keep commented for local http development
 app.UseCors(MyAllowSpecificOrigins);
-app.UseAuthentication();
+
+app.UseAuthentication(); 
 app.UseAuthorization();
+
 app.MapControllers();
 app.Run();

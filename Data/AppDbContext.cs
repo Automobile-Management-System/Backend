@@ -13,8 +13,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<Service> Services { get; set; }
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<AppointmentService> AppointmentServices { get; set; }
+
+    public DbSet<EmployeeAppointment> EmployeeAppointments { get; set; }
     public DbSet<Payment> Payments { get; set; }
-    public DbSet<AddOn> AddOns { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<ModificationRequest> ModificationRequests { get; set; }
     public DbSet<TimeLog> TimeLogs { get; set; }
@@ -67,7 +68,7 @@ public class ApplicationDbContext : DbContext
         // If a user is deleted, you might want to keep their appointment history.
         modelBuilder.Entity<Appointment>()
             .HasOne(a => a.User)
-            .WithMany() // Assuming User model will have an ICollection<Appointment>
+            .WithMany(u => u.Appointments) // Use the property added to the User class
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
@@ -85,5 +86,22 @@ public class ApplicationDbContext : DbContext
            .WithMany(a => a.TimeLogs)
            .HasForeignKey(tl => tl.AppointmentId)
            .OnDelete(DeleteBehavior.Cascade);
+
+
+        // --- EmployeeAppointment (Many-to-Many Join Table) Configuration ---
+        modelBuilder.Entity<EmployeeAppointment>()
+            .HasKey(ea => new { ea.AppointmentId, ea.UserId });
+
+
+        modelBuilder.Entity<EmployeeAppointment>()
+            .HasOne(ea => ea.Appointment)
+            .WithMany(a => a.EmployeeAppointments) // Specify the property
+            .HasForeignKey(ea => ea.AppointmentId);
+
+        modelBuilder.Entity<EmployeeAppointment>()
+            .HasOne(ea => ea.User)
+            .WithMany() 
+            .HasForeignKey(ea => ea.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -21,17 +21,25 @@
 
         public string? PhoneNumber { get; set; }
 
-        [Required]
-        public byte[] PasswordHash { get; set; } = new byte[32]; // For HashPassword
+        public byte[]? PasswordHash { get; set; }
 
-        [Required]
-        public byte[] PasswordSalt { get; set; } = new byte[32]; // Important for security
+        public byte[]? PasswordSalt { get; set; }
 
         public string? Address { get; set; }
 
         public string? ProfilePicture { get; set; }
 
+        public string? Status { get; set; }
+
         [Required]
         public Enums Role { get; set; }
+
+
+        // Navigation properties for relationships
+        public ICollection<CustomerVehicle> CustomerVehicles { get; set; }
+        public ICollection<Appointment> Appointments { get; set; }
+        public ICollection<TimeLog> TimeLogs { get; set; }
+        public ICollection<Report> Reports { get; set; }
+        public ICollection<EmployeeAppointment> EmployeeAppointments { get; set; }
     }
 }
