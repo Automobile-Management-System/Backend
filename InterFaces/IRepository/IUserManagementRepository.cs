@@ -1,13 +1,17 @@
+using automobile_backend.Models.DTOs;
 using automobile_backend.Models.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace automobile_backend.InterFaces.IRepository
+namespace automobile_backend.InterFaces.IRepositories
 {
     public interface IUserManagementRepository
     {
-        Task<IEnumerable<User>> GetUsersAsync();
-        Task<User> GetUserByIdAsync(int userId);
-
+        Task<User> AddEmployeeAsync(UserRegisterDto dto);
+        Task<User?> GetUserByIdAsync(int id);
+        Task<IEnumerable<User>> GetAllUsersAsync();
+        Task<User?> UpdateUserAsync(int id, UserUpdateDto dto);
+        Task<bool> ActivateUserAsync(int id);
+        Task<bool> DeactivateUserAsync(int id);
     }
 }
