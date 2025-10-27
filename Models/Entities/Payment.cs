@@ -11,6 +11,7 @@ namespace automobile_backend.Models.Entities
         [Required]
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Amount { get; set; }
+        public PaymentStatus Status { get; set; }
 
         public PaymentMethod PaymentMethod { get; set; }
 

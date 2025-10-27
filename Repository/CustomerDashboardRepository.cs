@@ -1,20 +1,32 @@
-﻿using automobile_backend.Models.Entities;
+﻿using automobile_backend.Interfaces.IRepositories;
+using automobile_backend.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-public class CustomerDashboardRepository : ICustomerDashboardRepository
+namespace automobile_backend.Repositories
 {
-    private readonly ApplicationDbContext _context;
-
-    public CustomerDashboardRepository(ApplicationDbContext context)
+    public class CustomerDashboardRepository : ICustomerDashboardRepository
     {
-        _context = context;
+        private readonly ApplicationDbContext _context;
+
+        public CustomerDashboardRepository(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task AddVehicleAsync(CustomerVehicle vehicle)
+        {
+            _context.CustomerVehicles.Add(vehicle);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<CustomerVehicle>> GetVehiclesByUserIdAsync(int userId)
+        {
+            return await _context.CustomerVehicles
+                                 .Where(v => v.UserId == userId)
+                                 .Include(v => v.User)
+                                 .ToListAsync();
+        }
     }
-
-    //public async Task<IEnumerable<Appointment>> GetUpcomingAppointmentsAsync(int userId)
-    //{
-    //    // TODO: Implement DB query to get upcoming appointments
-    //    throw new NotImplementedException();
-    //}
-
-
 }
