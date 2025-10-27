@@ -12,28 +12,25 @@ namespace automobile_backend.Services
     {
         private readonly IModificationRequestRepository _modificationRepository;
         private readonly IPaymentRepository _paymentRepository;
-        private readonly IAddOnRepository _addOnRepository;
 
         public ModificationRequestService(
             IModificationRequestRepository modificationRepository,
-            IPaymentRepository paymentRepository,
-            IAddOnRepository addOnRepository)
+            IPaymentRepository paymentRepository)
         {
             _modificationRepository = modificationRepository;
             _paymentRepository = paymentRepository;
-            _addOnRepository = addOnRepository;
         }
 
         public async Task<IEnumerable<object>> GetAllModificationRequestsAsync()
         {
             var requests = await _modificationRepository.GetAllAsync();
-            
+
             return requests.Select(r => new
             {
                 id = r.ModificationId,
                 customerId = r.Appointment?.UserId ?? 0,
-                customerName = r.Appointment?.User != null 
-                    ? $"{r.Appointment.User.FirstName} {r.Appointment.User.LastName}" 
+                customerName = r.Appointment?.User != null
+                    ? $"{r.Appointment.User.FirstName} {r.Appointment.User.LastName}"
                     : "Unknown",
                 appointmentId = r.AppointmentId,
                 serviceType = "Vehicle Service",
@@ -42,7 +39,6 @@ namespace automobile_backend.Services
                 description = r.Description,
                 requestType = "modification",
                 priority = "medium",
-                status = r.Status.ToString().ToLower(),
                 adminResponse = r.AdminResponse,
                 createdAt = r.CreatedAt
             });
@@ -51,7 +47,7 @@ namespace automobile_backend.Services
         public async Task<object?> ReviewModificationRequestAsync(int id, ReviewRequestDto reviewDto)
         {
             var request = await _modificationRepository.GetByIdAsync(id);
-            
+
             if (request == null)
             {
                 return null;
@@ -60,46 +56,16 @@ namespace automobile_backend.Services
             // Update modification request
             request.AdminResponse = reviewDto.AdminResponse;
 
-            if (reviewDto.Action.ToLower() == "approve")
-            {
-                request.Status = ModificationStatus.Approved;
-
-                // Create AddOn if estimated cost is provided
-                if (reviewDto.EstimatedCost.HasValue && reviewDto.EstimatedCost.Value > 0)
-                {
-                    var payment = await _paymentRepository.GetByAppointmentIdAsync(request.AppointmentId);
-                    
-                    if (payment != null)
-                    {
-                        // Create new AddOn
-                        var addOn = new AddOn
-                        {
-                            Description = $"Modification: {request.Title}",
-                            Amount = reviewDto.EstimatedCost.Value,
-                            PaymentId = payment.PaymentId
-                        };
-
-                        await _addOnRepository.CreateAsync(addOn);
-
-                        // Update payment total
-                        payment.Amount += reviewDto.EstimatedCost.Value;
-                        await _paymentRepository.UpdateAsync(payment);
-                    }
-                }
-            }
-            else if (reviewDto.Action.ToLower() == "reject")
-            {
-                request.Status = ModificationStatus.Rejected;
-            }
+            // Note: Status logic removed because entity has no Status field anymore
 
             await _modificationRepository.UpdateAsync(request);
-            
+
             return new
             {
                 id = request.ModificationId,
                 customerId = request.Appointment?.UserId ?? 0,
-                customerName = request.Appointment?.User != null 
-                    ? $"{request.Appointment.User.FirstName} {request.Appointment.User.LastName}" 
+                customerName = request.Appointment?.User != null
+                    ? $"{request.Appointment.User.FirstName} {request.Appointment.User.LastName}"
                     : "Unknown",
                 appointmentId = request.AppointmentId,
                 serviceType = "Vehicle Service",
@@ -108,7 +74,6 @@ namespace automobile_backend.Services
                 description = request.Description,
                 requestType = "modification",
                 priority = "medium",
-                status = request.Status.ToString().ToLower(),
                 estimatedCost = reviewDto.EstimatedCost ?? 0,
                 adminResponse = request.AdminResponse,
                 createdAt = request.CreatedAt
