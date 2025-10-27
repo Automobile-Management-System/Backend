@@ -35,14 +35,14 @@
     public enum PaymentMethod
     {
         CreditCard,
-        DebitCard,
         Cash,
-        BankTransfer
+        BankTransfer,
+        Stripe
     }
 
     public enum Type
     {
         Modifications,
-        Service 
+        Service
     }
 }
