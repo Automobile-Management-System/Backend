@@ -10,7 +10,6 @@ namespace automobile_backend.Controllers
         public string Question { get; set; } = string.Empty;
     }
 
-    [Authorize] // Require authentication (Customer/Employee/Admin can use it)
     [ApiController]
     [Route("api/[controller]")]
     public class ChatbotController : ControllerBase
