@@ -1,6 +1,10 @@
 using System.Text;
+using automobile_backend.Interfaces.IRepositories;
+using automobile_backend.Interfaces.IServices;
+using automobile_backend.InterFaces.IRepositories;
 using automobile_backend.InterFaces.IRepository;
 using automobile_backend.InterFaces.IServices;
+using automobile_backend.Repositories;
 using automobile_backend.Repository;
 using automobile_backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

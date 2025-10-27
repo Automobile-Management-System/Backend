@@ -1,6 +1,12 @@
-﻿// Add using statements for your DTOs
+﻿using automobile_backend.Models.DTOs;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-public interface ICustomerDashboardService
+namespace automobile_backend.Interfaces.IServices
 {
-    // Task<CustomerDashboardDto> GetDashboardDataAsync(int userId);
+    public interface ICustomerDashboardService
+    {
+        Task AddVehicleAsync(int userId, CustomerVehicleDto dto);
+        Task<List<CustomerVehicleDto>> GetVehiclesByUserIdAsync(int userId);
+    }
 }
