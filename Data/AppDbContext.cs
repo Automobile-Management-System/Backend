@@ -76,7 +76,7 @@ public class ApplicationDbContext : DbContext
         // If a staff member's account is deleted, their logged time should likely remain.
         modelBuilder.Entity<TimeLog>()
            .HasOne(tl => tl.User)
-           .WithMany() // Assuming User model will have an ICollection<TimeLog>
+           .WithMany(u => u.TimeLogs) // <-- SPECIFY THE COLLECTION
            .HasForeignKey(tl => tl.UserId)
            .OnDelete(DeleteBehavior.Restrict);
 
@@ -99,9 +99,9 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(ea => ea.AppointmentId);
 
         modelBuilder.Entity<EmployeeAppointment>()
-            .HasOne(ea => ea.User)
-            .WithMany() 
-            .HasForeignKey(ea => ea.UserId)
+            .HasOne(ea => ea.User) // The 'User' property in EmployeeAppointment
+            .WithMany(u => u.EmployeeAppointments) // <-- SPECIFY THE COLLECTION
+            .HasForeignKey(ea => ea.UserId) // The FK in EmployeeAppointment
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

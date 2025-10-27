@@ -17,6 +17,9 @@ namespace automobile_backend.Models.Entities
         [Required]
         public DateTime GeneratedDate { get; set; }
 
+        [Required]
+        public string ReportLink { get; set; } = string.Empty;
+
         // Foreign Key for the User who generated the report
         public int UserId { get; set; }
 
