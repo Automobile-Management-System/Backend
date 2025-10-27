@@ -1,4 +1,6 @@
 using System.Text;
+using automobile_backend.Interfaces.IRepositories;
+using automobile_backend.Interfaces.IServices;
 using automobile_backend.InterFaces.IRepositories;
 using automobile_backend.InterFaces.IRepository;
 using automobile_backend.InterFaces.IServices;
