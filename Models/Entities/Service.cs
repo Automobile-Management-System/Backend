@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema; // <-- ADD THIS
+using System.ComponentModel.DataAnnotations;
 
 namespace automobile_backend.Models.Entities
 {
@@ -7,18 +7,19 @@ namespace automobile_backend.Models.Entities
     {
         [Key]
         public int ServiceId { get; set; }
+        
+        public string ServiceName { get; set; }
+        
+        public string Description { get; set; }
+        
+        // ... other properties ...
 
-        [Required]
-        [MaxLength(100)]
-        public string ServiceName { get; set; } = string.Empty;
-
-        public string Description { get; set; } = string.Empty;
-
+        // --- ADD THIS PROPERTY ---
         [Required]
         [Column(TypeName = "decimal(18, 2)")]
-        public decimal BasePrice { get; set; }
+        public decimal Price { get; set; }
 
-        // Navigation property for the many-to-many relationship
+        // Navigation property
         public ICollection<AppointmentService> AppointmentServices { get; set; }
     }
 }

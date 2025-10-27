@@ -1,4 +1,5 @@
 using System.Text;
+using automobile_backend.Data; // <-- ADDED
 using automobile_backend.InterFaces.IRepositories;
 using automobile_backend.InterFaces.IRepository;
 using automobile_backend.InterFaces.IServices;
@@ -82,14 +83,35 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Configure Swagger to use JWT
+// *** UPDATED SWAGGER CONFIGURATION ***
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+    // Define the Bearer security scheme
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
+                      "Enter 'Bearer' [space] and then your token in the text input below. \r\n\r\n" +
+                      "Example: \"Bearer 12345abcdef\"",
         Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http, // Use Http for Bearer
+        Scheme = "Bearer" // The scheme name
+    });
+
+    // Make Swagger UI use the Bearer scheme
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
     });
 });
 
@@ -133,8 +155,6 @@ builder.Services.AddAuthentication(options =>
     options.ClientId = configuration["Google:ClientId"]!;
     options.ClientSecret = configuration["Google:ClientSecret"]!;
    
-    
-
     // This is the dedicated path the Google middleware will listen on.
     options.CallbackPath = "/api/Auth/signin-google"; 
     
@@ -164,6 +184,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // app.UseHttpsRedirection(); // Keep commented for local http development
+
+// This order is critical
 app.UseCors(MyAllowSpecificOrigins);
 
 app.UseAuthentication(); 

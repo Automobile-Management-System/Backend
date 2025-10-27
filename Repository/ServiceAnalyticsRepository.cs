@@ -3,6 +3,7 @@ using automobile_backend.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using automobile_backend.Data;
 
 namespace automobile_backend.Repository
 {

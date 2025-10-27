@@ -3,6 +3,7 @@
     using automobile_backend.InterFaces.IRepository;
     using automobile_backend.Models.Entities;
     using Microsoft.EntityFrameworkCore;
+    using automobile_backend.Data;
 
     public class AuthRepository : IAuthRepository
     {

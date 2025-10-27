@@ -1,5 +1,6 @@
 ﻿using automobile_backend.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using automobile_backend.Data;
 
 public class CustomerDashboardRepository : ICustomerDashboardRepository
 {
