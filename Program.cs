@@ -65,8 +65,10 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 // Register Notification & Alerts
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
+
+
 // Register AI Chatbot Service
-builder.Services.AddScoped<IChatbotService, ChatbotService>();
+builder.Services.AddHttpClient<IChatbotService, ChatbotService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
