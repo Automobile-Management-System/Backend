@@ -45,7 +45,8 @@ namespace automobile_backend.Services
                 Address = request.Address,
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt,
-                Role = Enums.Customer // Default role
+                Role = Enums.Customer, // Default role
+                Status = "Active"
             };
 
             return await _authRepository.CreateUserAsync(user);
