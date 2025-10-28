@@ -1,5 +1,5 @@
-using automobile_backend.InterFaces.IRepository;
 using automobile_backend.InterFaces.IServices;
+using automobile_backend.InterFaces.IRepository;
 using automobile_backend.Models.Entities;
 using System;
 using System.Collections.Generic;
@@ -11,65 +11,110 @@ namespace automobile_backend.Services
     public class ModificationRequestService : IModificationRequestService
     {
         private readonly IModificationRequestRepository _modificationRepository;
-        private readonly IPaymentRepository _paymentRepository;
 
-        public ModificationRequestService(
-            IModificationRequestRepository modificationRepository,
-            IPaymentRepository paymentRepository)
+        public ModificationRequestService(IModificationRequestRepository modificationRepository)
         {
             _modificationRepository = modificationRepository;
-            _paymentRepository = paymentRepository;
         }
 
-        public async Task<IEnumerable<object>> GetAllModificationRequestsAsync()
+        // Pagination support: returns data and total count
+        public async Task<(IEnumerable<object> Data, int TotalCount)> GetAllModificationRequestsAsync(int pageNumber = 1, int pageSize = 10)
         {
             var requests = await _modificationRepository.GetAllAsync();
 
-            return requests.Select(r => new
+            var totalCount = requests.Count();
+
+            var pagedRequests = requests
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new
+                {
+                    modificationId = r.ModificationId,
+                    modificationName = r.Title,
+                    description = r.Description,
+                    userName = r.Appointment?.User != null
+                        ? $"{r.Appointment.User.FirstName} {r.Appointment.User.LastName}"
+                        : "Unknown",
+                    vehicleNumber = r.Appointment?.CustomerVehicle?.RegistrationNumber ?? "N/A",
+                    status = r.Appointment?.Status.ToString() ?? "Unknown",
+                    dateTime = r.Appointment?.DateTime ?? DateTime.MinValue,
+                    amount = r.Appointment?.Amount ?? 0,
+                    assignee = r.Appointment?.EmployeeAppointments?.FirstOrDefault()?.User != null
+                        ? $"{r.Appointment.EmployeeAppointments.FirstOrDefault().User.FirstName} {r.Appointment.EmployeeAppointments.FirstOrDefault().User.LastName}"
+                        : "Unassigned",
+                    appointmentId = r.AppointmentId
+                });
+
+            return (pagedRequests, totalCount);
+        }
+
+     public async Task<object?> ReviewModificationRequestAsync(int id, ReviewRequestDto reviewDto)
+{
+    var request = await _modificationRepository.GetByIdAsync(id);
+
+    if (request == null)
+        return null;
+
+    // Defensive check — ensure Appointment is loaded
+    if (request.Appointment == null)
+        throw new Exception("Appointment not found for this modification request.");
+
+    // Ensure EmployeeAppointments is initialized
+    request.Appointment.EmployeeAppointments ??= new List<EmployeeAppointment>();
+
+    // ✅ Assign employee if AssigneeId is provided and status is pending
+    if (request.Appointment.Status == AppointmentStatus.Pending && reviewDto.AssigneeId.HasValue)
+    {
+        var exists = request.Appointment.EmployeeAppointments
+            .Any(ea => ea.UserId == reviewDto.AssigneeId.Value);
+
+        if (!exists)
+        {
+            request.Appointment.EmployeeAppointments.Add(new EmployeeAppointment
             {
-                id = r.ModificationId,
-                customerId = r.Appointment?.UserId ?? 0,
-                customerName = r.Appointment?.User != null
-                    ? $"{r.Appointment.User.FirstName} {r.Appointment.User.LastName}"
-                    : "Unknown",
-                appointmentId = r.AppointmentId,
-                serviceType = "Vehicle Service",
-                appointmentDate = r.Appointment?.DateTime ?? DateTime.Now,
-                title = r.Title,
-                description = r.Description,
-                requestType = "modification",
-                priority = "medium"
+                AppointmentId = request.AppointmentId,
+                UserId = reviewDto.AssigneeId.Value
             });
         }
+    }
 
-        public async Task<object?> ReviewModificationRequestAsync(int id, ReviewRequestDto reviewDto)
-        {
-            var request = await _modificationRepository.GetByIdAsync(id);
+    // ✅ Update appointment status based on action
+    if (!string.IsNullOrWhiteSpace(reviewDto.Action))
+    {
+        var action = reviewDto.Action.ToLower();
 
-            if (request == null)
-            {
-                return null;
-            }
+        if (action == "approve")
+            request.Appointment.Status = AppointmentStatus.Upcoming;
+        else if (action == "reject")
+            request.Appointment.Status = AppointmentStatus.Rejected;
+    }
 
-            // Removed AdminResponse because it's not part of the entity anymore
-            await _modificationRepository.UpdateAsync(request);
+    // ✅ Update estimated cost safely
+    if (reviewDto.EstimatedCost.HasValue && reviewDto.EstimatedCost.Value > 0)
+        request.Appointment.Amount += reviewDto.EstimatedCost.Value;
 
-            return new
-            {
-                id = request.ModificationId,
-                customerId = request.Appointment?.UserId ?? 0,
-                customerName = request.Appointment?.User != null
-                    ? $"{request.Appointment.User.FirstName} {request.Appointment.User.LastName}"
-                    : "Unknown",
-                appointmentId = request.AppointmentId,
-                serviceType = "Vehicle Service",
-                appointmentDate = request.Appointment?.DateTime ?? DateTime.Now,
-                title = request.Title,
-                description = request.Description,
-                requestType = "modification",
-                priority = "medium",
-                estimatedCost = reviewDto.EstimatedCost ?? 0
-            };
-        }
+    await _modificationRepository.UpdateAsync(request);
+
+    // ✅ Safely build response
+    var assigneeNames = request.Appointment.EmployeeAppointments?
+        .Where(ea => ea.User != null)
+        .Select(ea => ea.User.FirstName + " " + ea.User.LastName)
+        .ToList();
+
+    return new
+    {
+        modificationId = request.ModificationId,
+        modificationName = request.Title,
+        description = request.Description,
+        assignee = (assigneeNames != null && assigneeNames.Any())
+            ? string.Join(", ", assigneeNames)
+            : "Unassigned",
+        appointmentId = request.AppointmentId,
+        status = request.Appointment.Status.ToString(),
+        amount = request.Appointment.Amount
+    };
+}
+
+
     }
 }
