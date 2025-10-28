@@ -1,4 +1,4 @@
-using automobile_backend.Models.Entities;
+using automobile_backend.Models.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -6,6 +6,7 @@ namespace automobile_backend.InterFaces.IServices
 {
     public interface IModificationRequestService
     {
-        Task<IEnumerable<ModificationRequest>> GetAllModificationRequestsAsync();
+        Task<IEnumerable<ModificationRequestDto>> GetAllModificationRequestsAsync();
+        Task AddModificationRequestAsync(ModificationRequestDto modificationRequestDto);
     }
 }

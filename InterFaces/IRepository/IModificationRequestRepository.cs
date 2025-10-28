@@ -7,5 +7,6 @@ namespace automobile_backend.InterFaces.IRepository
     public interface IModificationRequestRepository
     {
         Task<IEnumerable<ModificationRequest>> GetAllAsync();
+        Task AddAsync(ModificationRequest modificationRequest);
     }
 }
