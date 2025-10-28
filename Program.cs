@@ -5,8 +5,10 @@ using automobile_backend.InterFaces.IRepositories;
 using automobile_backend.InterFaces.IRepository;
 using automobile_backend.InterFaces.IServices;
 using automobile_backend.Repositories;
+using automobile_backend.Repositories.Interfaces;
 using automobile_backend.Repository;
 using automobile_backend.Services;
+using automobile_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -73,6 +75,11 @@ builder.Services.AddHttpClient<IChatbotService, ChatbotService>();
 // Register Service Progress functionality
 builder.Services.AddScoped<IServiceProgressRepository, ServiceProgressRepository>();
 builder.Services.AddScoped<IServiceProgressService, ServiceProgressService>();
+
+// Register ViewService functionality
+builder.Services.AddScoped<IViewServiceRepository, ViewServiceRepository>();
+builder.Services.AddScoped<IViewServiceService, ViewServiceService>();
+
 
 // Configure CORS
 builder.Services.AddCors(options =>
