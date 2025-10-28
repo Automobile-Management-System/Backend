@@ -51,22 +51,22 @@ namespace automobile_backend.Services
             return await _authRepository.CreateUserAsync(user);
         }
 
-        public async Task<string?> LoginAsync(UserLoginDto request)
+        public async Task<(User? user, string? token)> LoginAsync(UserLoginDto request)
         {
             var user = await _authRepository.GetUserByEmailAsync(request.Email);
 
-            // Ensure user exists and has a password (not a Google-only user)
             if (user == null || user.PasswordHash == null || user.PasswordSalt == null)
             {
-                return null;
+                return (null, null); // Return tuple
             }
 
             if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
             {
-                return null; // Invalid credentials
+                return (null, null); // Return tuple
             }
 
-            return CreateJwtToken(user);
+            var token = CreateJwtToken(user);
+            return (user, token); // Return tuple
         }
 
         // --- Google Auth Method ---
@@ -166,6 +166,11 @@ namespace automobile_backend.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);
+        }
+
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            return await _authRepository.GetUserByEmailAsync(email);
         }
     }
 }
