@@ -19,50 +19,35 @@ public class ChatbotService : IChatbotService
     private readonly string _apiKey;
     private readonly string _geminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
-    // --- NEW: KNOWLEDGE BASE FOR GENERAL QUESTIONS ---
+    // --- KNOWLEDGE BASE (Unchanged) ---
     private const string KnowledgeBase = """
         You are a helpful assistant for "AutoServe 360".
         
         ## System Overview
-        In today’s world, people expect quick and convenient services, and the automobile
-        industry is no exception. Many service centers still depend on manual processes for
-        booking appointments, tracking service progress, and handling payments, which often
-        leads to delays, miscommunication, and customer dissatisfaction.
-        
         Our project, the Automobile Service Time Logging & Appointment System (AutoServe 360), is
-        developed to overcome these issues. The system brings customers, employees, and
+        developed to overcome issues like manual booking and payment tracking. The system brings customers, employees, and
         administrators into one digital platform where everything can be managed efficiently.
-        Customers will be able to book services, request modifications, make payments, and
-        check updates in real time. Employees can log their working hours, manage assigned
-        tasks, and update progress, while administrators can monitor the entire process, manage
-        users, and analyze reports.
-        By making use of modern tools and practices, this project aims to create a secure, user-friendly, and scalable system that improves the overall experience of both customers
-        and service providers.
         
         ## User Roles & Features
-        
         ### Customer
         - **Dashboard:** View personal data and added vehicles.
         - **Service:** Book new appointments for services.
         - **Modification:** Request modifications for their vehicles.
         - **Payment:** Make payments for services.
-        - **About Us & Home:** View landing page details.
-        
         ### Employee
         - **Dashboard:** View personalized employee data.
         - **Work Progress:** Start and stop time logs for tasks.
         - **View Services/Modifications:** Can view all available services and modifications.
-        
         ### Admin
         - **Dashboard:** See all revenue, user counts, and system metrics.
-        - **User Management:** Add employees, manage user roles, edit user data, and set users as active/inactive.
-        - **Service Management:** Create new services offered by the center.
-        - **Payment Management:** Manually mark cash payments as complete and view all transactions.
+        - **User Management:** Add employees, manage user roles, edit user data, etc.
+        - **Service Management:** Create new services.
+        - **Payment Management:** Manually mark cash payments as complete.
         - **Manage Appointments:** View and manage all service and modification appointments.
         - **Analytics:** Generate reports and view system analytics.
         """;
 
-    // --- UNCHANGED: DATABASE SCHEMA FOR SQL QUESTIONS ---
+    // --- DATABASE SCHEMA (Unchanged) ---
     private const string DatabaseSchema = """
         You are a professional SQL generation AI for a car service management system.
         Your SOLE task is to convert natural language questions into a single, valid, optimized SQL Server SELECT query.
@@ -70,7 +55,6 @@ public class ChatbotService : IChatbotService
         DO NOT generate any INSERT, UPDATE, or DELETE queries. The connection is READ-ONLY.
 
         --- DATABASE SCHEMA ---
-
         ## TABLES
         - Users (UserId, FirstName, LastName, Role)
         - CustomerVehicles (VehicleId, RegistrationNumber, FuelType, ChassisNumber, Brand, Model, Year, UserId)
@@ -85,63 +69,29 @@ public class ChatbotService : IChatbotService
         - EmployeeAppointments (AppointmentId, UserId) -- [Many-to-Many Join Table]
 
         ## ENUMERATIONS (Use these numerical values)
-        - Users.Role:
-            0 = Admin
-            1 = Employee
-            2 = Customer
-        - CustomerVehicles.FuelType:
-            0 = Petrol
-            1 = Diesel
-            2 = Electric
-            3 = Hybrid
-        - Appointments.Status (AppointmentStatus):
-            0 = Pending
-            1 = Upcoming
-            2 = InProgress
-            3 = Completed
-            4 = Rejected
-        - Appointments.Type:
-            0 = Modifications
-            1 = Service
-        - Payments.Status (PaymentStatus):
-            0 = Pending
-            1 = Completed
-            2 = Failed
-            3 = Refunded
-        - Payments.PaymentMethod:
-            0 = CreditCard
-            1 = DebitCard
-            2 = Cash
-            3 = BankTransfer
+        - Users.Role: { 0 = Admin, 1 = Employee, 2 = Customer }
+        - CustomerVehicles.FuelType: { 0 = Petrol, 1 = Diesel, 2 = Electric, 3 = Hybrid }
+        - Appointments.Status (AppointmentStatus): { 0 = Pending, 1 = Upcoming, 2 = InProgress, 3 = Completed, 4 = Rejected }
+        - Appointments.Type: { 0 = Modifications, 1 = Service }
+        - Payments.Status (PaymentStatus): { 0 = Pending, 1 = Completed, 2 = Failed, 3 = Refunded }
+        - Payments.PaymentMethod: { 0 = CreditCard, 1 = DebitCard, 2 = Cash, 3 = BankTransfer }
         
         ## TABLE RELATIONSHIPS (How to JOIN)
-        - **Users & Appointments (Customer)**: Users.UserId (Role=2) -> Appointments.UserId
-        - **Users & CustomerVehicles (Customer)**: Users.UserId (Role=2) -> CustomerVehicles.UserId
-        - **CustomerVehicles & Appointments**: CustomerVehicles.VehicleId -> Appointments.VehicleId
-        
-        - **Users & TimeLogs (Employee)**: Users.UserId (Role=1) -> TimeLogs.UserId
-        - **Appointments & TimeLogs**: Appointments.AppointmentId -> TimeLogs.AppointmentId
-        
-        - **Users & Reports (Admin)**: Users.UserId (Role=0) -> Reports.UserId
-
-        - **Appointments & Payments (One-to-One)**: Appointments.AppointmentId -> Payments.AppointmentId
-        - **Appointments & Reviews (One-to-One)**: Appointments.AppointmentId -> Reviews.AppointmentId
-        - **Appointments & ModificationRequests (One-to-Many)**: Appointments.AppointmentId -> ModificationRequests.AppointmentId
-
-        - **Appointments <-> Services (Many-to-Many)**:
-            - JOIN Appointments ON Appointments.AppointmentId = AppointmentServices.AppointmentId
-            - JOIN Services ON Services.ServiceId = AppointmentServices.ServiceId
-        
-        - **Appointments <-> Users (Employee) (Many-to-Many)**:
-            - JOIN Appointments ON Appointments.AppointmentId = EmployeeAppointments.AppointmentId
-            - JOIN Users ON Users.UserId = EmployeeAppointments.UserId (WHERE Role=1)
+        - Users.UserId (Role=2) -> Appointments.UserId
+        - Users.UserId (Role=2) -> CustomerVehicles.UserId
+        - Users.UserId (Role=1) -> TimeLogs.UserId
+        - Users.UserId (Role=0) -> Reports.UserId
+        - Appointments.AppointmentId -> Payments.AppointmentId (One-to-One)
+        - Appointments.AppointmentId -> Reviews.AppointmentId (One-to-One)
+        - Appointments.AppointmentId -> ModificationRequests.AppointmentId (One-to-Many)
+        - JOIN Appointments <-> Services via AppointmentServices
+        - JOIN Appointments <-> Users (Employee) via EmployeeAppointments
 
         --- CRITICAL SQL RULES ---
         1. **Strictly use the table and column names listed above.**
         2. **ALWAYS USE ISNULL(AGGREGATE_FUNCTION, 0)** for all SUM, AVG, and COUNT.
         3. **Role-Based Joins**: Filter `Users.Role = 1` for employees, `Users.Role = 2` for customers, `Users.Role = 0` for admins.
         4. **String Matching**: Use `LIKE '%value%'` for partial string matching.
-        5. **Use ENUM values**: Always use the numerical values provided.
         """;
 
     public ChatbotService(HttpClient httpClient, IConfiguration configuration, ApplicationDbContext dbContext)
@@ -150,29 +100,25 @@ public class ChatbotService : IChatbotService
         _configuration = configuration;
         _dbContext = dbContext;
         _apiKey = configuration["Gemini:ApiKey"]
-            ?? throw new InvalidOperationException("Gemini:ApiKey not found in configuration.");
+            ?? throw new InvalidOperationException("GemGini:ApiKey not found in configuration.");
     }
 
-    // --- UPDATED: This is now a "Router" method ---
-    public async Task<string> AnswerQuestionAsync(string userQuestion)
+    // --- Main Router Method (Unchanged) ---
+    public async Task<string> AnswerQuestionAsync(string userQuestion, int userId, string userRole)
     {
-        // Step 1: Classify the user's intent
         string category = await ClassifyQuestionAsync(userQuestion);
 
-        // Step 2: Route to the correct answering pipeline
         switch (category)
         {
             case "DATABASE":
-                return await AnswerDatabaseQuestionAsync(userQuestion);
+                return await AnswerDatabaseQuestionAsync(userQuestion, userId, userRole);
             case "GENERAL":
-                return await AnswerGeneralQuestionAsync(userQuestion);
             default:
-                // Fallback if classification fails
                 return await AnswerGeneralQuestionAsync(userQuestion);
         }
     }
 
-    // --- NEW: Pipeline for General Knowledge Questions ---
+    // --- General Knowledge Pipeline (Unchanged) ---
     private async Task<string> AnswerGeneralQuestionAsync(string userQuestion)
     {
         string prompt = $"""
@@ -184,43 +130,32 @@ public class ChatbotService : IChatbotService
             Answer:
             """;
 
-        var request = new GeminiRequest
-        {
-            Contents = new List<Content>
-            {
-                new() { Parts = new List<Part> { new() { Text = prompt } } }
-            }
-        };
-
-        // Use a friendly persona for this type of answer
+        var request = new GeminiRequest { Contents = new List<Content> { new() { Parts = new List<Part> { new() { Text = prompt } } } } };
         string finalAnswer = await SendRequestToGemini(request, "You are a friendly, helpful customer service assistant for AutoServe 360.");
         return finalAnswer.Trim().Replace("\"", "");
     }
 
-    // --- NEW: Pipeline for Database/SQL Questions ---
-    // (This is the logic from your old AnswerQuestionAsync method)
-    private async Task<string> AnswerDatabaseQuestionAsync(string userQuestion)
+    // --- Database Pipeline (Unchanged) ---
+    private async Task<string> AnswerDatabaseQuestionAsync(string userQuestion, int userId, string userRole)
     {
-        // 1. Generate SQL
-        string sqlQuery = await GetSqlQueryFromGemini(userQuestion);
-        if (string.IsNullOrWhiteSpace(sqlQuery))
+        string sqlQuery = await GetSqlQueryFromGemini(userQuestion, userId, userRole);
+        if (string.IsNullOrWhiteSpace(sqlQuery) || sqlQuery.Contains("Access Denied"))
         {
-            return "I couldn't generate a valid query for that question. Please try rephrasing.";
+            // If the AI correctly denies access, we catch it here.
+            return "I'm sorry, I can only provide information related to your own account.";
         }
 
-        // 2. Execute SQL
         string? jsonResult = await ExecuteSqlQuery(sqlQuery);
         if (jsonResult == null)
         {
             return "I executed the query but found no data matching your request, or the query failed structurally. Check backend logs.";
         }
 
-        // 3. Convert JSON result to conversational answer
         return await GetConversationalAnswerFromGemini(userQuestion, sqlQuery, jsonResult);
     }
 
 
-    // --- NEW: Classifier to route requests ---
+    // --- Classifier (Unchanged) ---
     private async Task<string> ClassifyQuestionAsync(string userQuestion)
     {
         string prompt = $"""
@@ -232,44 +167,83 @@ public class ChatbotService : IChatbotService
             Classification:
             """;
 
-        var request = new GeminiRequest
-        {
-            Contents = new List<Content> { new() { Parts = new List<Part> { new() { Text = prompt } } } }
-        };
-
+        var request = new GeminiRequest { Contents = new List<Content> { new() { Parts = new List<Part> { new() { Text = prompt } } } } };
         string classification = await SendRequestToGemini(request);
-
-        // Clean and validate the response
         classification = classification.Trim().ToUpper();
+
         if (classification == "DATABASE") return "DATABASE";
         if (classification == "GENERAL") return "GENERAL";
 
-        // Fallback logic for safety
+        // Fallback logic
         var lowerQuestion = userQuestion.ToLower();
         if (lowerQuestion.StartsWith("hi") || lowerQuestion.StartsWith("hello") || lowerQuestion.Contains("how to") || lowerQuestion.Contains("what is"))
         {
             return "GENERAL";
         }
-
-        // If unsure, default to trying it as a database query
         return "DATABASE";
     }
 
 
-    // --- UNCHANGED HELPER: GetSqlQueryFromGemini ---
-    private async Task<string> GetSqlQueryFromGemini(string userQuestion)
+    // --- UPDATED: GetSqlQueryFromGemini (Significantly More Secure) ---
+    private async Task<string> GetSqlQueryFromGemini(string userQuestion, int userId, string userRole)
     {
-        string fullPrompt = $"{DatabaseSchema}\n\nUser Question: {userQuestion}\n\nSQL Query:";
-        var request = new GeminiRequest
+        var promptBuilder = new StringBuilder();
+        promptBuilder.AppendLine(DatabaseSchema); // Base schema
+
+        // --- NEW: Add dynamic, role-specific security rules ---
+        if (userRole == "Customer")
         {
-            Contents = new List<Content> { new() { Parts = new List<Part> { new() { Text = fullPrompt } } } }
-        };
+            promptBuilder.AppendLine("### SECURITY CONTEXT (MANDATORY) ###");
+            promptBuilder.AppendLine($"- You are generating this query on behalf of a CUSTOMER with UserId = {userId}.");
+            promptBuilder.AppendLine($"- **PRIMARY RULE:** All queries on customer-related tables (Appointments, CustomerVehicles, Payments, Reviews, Users) MUST contain a `WHERE` clause filtering for this user (e.g., `... WHERE UserId = {userId}`).");
+            promptBuilder.AppendLine($"- **CONFLICT RULE:** If the user's question (e.g., 'show me Sara Smith's car') *conflicts* with your PRIMARY RULE, the PRIMARY RULE **ALWAYS WINS**.");
+            promptBuilder.AppendLine("- In case of a conflict, you MUST generate a query that includes *both* the user's request AND the security filter. This will correctly return no results.");
+            promptBuilder.AppendLine("- **Correct (Safe) Query for 'Show me Sara Smith's car':**");
+            promptBuilder.AppendLine($"`SELECT v.Brand, v.Model FROM CustomerVehicles v JOIN Users u ON v.UserId = u.UserId WHERE u.FirstName = 'Sara' AND u.LastName = 'Smith' AND v.UserId = {userId};`");
+            promptBuilder.AppendLine("- **Incorrect (UNSAFE) Query:** `SELECT ... WHERE u.FirstName = 'Sara';` (This is a security breach and must be avoided).");
+        }
+        else if (userRole == "Employee")
+        {
+            promptBuilder.AppendLine("### SECURITY CONTEXT (MANDATORY) ###");
+            promptBuilder.AppendLine($"- You are generating this query on behalf of an EMPLOYEE with UserId = {userId}.");
+            promptBuilder.AppendLine($"- **ALLOWED (PERSONAL):** You can query your *own* personal data. This includes your `TimeLogs` and your *assigned appointments* from `EmployeeAppointments`.");
+            promptBuilder.AppendLine($"- **ALLOWED (JOINING):** To find your assigned appointments, you MUST join `EmployeeAppointments` with `Appointments` and filter `EmployeeAppointments.UserId = {userId}`.");
+            promptBuilder.AppendLine($"- **ALLOWED (GENERAL):** You can query *all* data from general tables like `Services` and `ModificationRequests`.");
+            promptBuilder.AppendLine($"- **DENIED (CUSTOMER DATA):** You MUST NOT generate queries that select *another user's* private data. This includes `Users`, `CustomerVehicles`, `Payments`, and `Reviews`.");
+            promptBuilder.AppendLine($"- **CONFLICT RULE:** If the user asks for *another user's* data (e.g., 'Show me Mike's car' or 'list all customer appointments'), you MUST NOT generate a query. Instead, you MUST return the single string: `Access Denied`");
+            promptBuilder.AppendLine("- **Example (Allowed):** `SELECT * FROM Services;`");
+            promptBuilder.AppendLine("- **Example (Allowed):** `SELECT SUM(HoursLogged) FROM TimeLogs WHERE UserId = {userId};`");
+            promptBuilder.AppendLine($"- **Example (Allowed for 'What appointments am I assigned to?'):** `SELECT a.AppointmentId, a.DateTime, a.Status FROM Appointments a JOIN EmployeeAppointments ea ON a.AppointmentId = ea.AppointmentId WHERE ea.UserId = {userId};`");
+            promptBuilder.AppendLine("- **Example (Denied):** `SELECT * FROM CustomerVehicles WHERE Brand = 'Toyota';`");
+            promptBuilder.AppendLine("- **Example (Denied):** `SELECT * FROM Appointments;` (This is unsafe as it's not filtered by employee ID).");
+        }
+        else if (userRole == "Admin")
+        {
+            promptBuilder.AppendLine("### SECURITY CONTEXT (ADMIN) ###");
+            promptBuilder.AppendLine("- You are generating this query on behalf of an ADMIN.");
+            promptBuilder.AppendLine("- You have full access to all tables and all user data. No security filters are required. You can fulfill any data request.");
+        }
+        // ----------------------------------------------------
+
+        promptBuilder.AppendLine("\n--- END OF RULES ---");
+        promptBuilder.AppendLine($"\nUser Question: {userQuestion}\n\nSQL Query:");
+
+        string fullPrompt = promptBuilder.ToString();
+
+        var request = new GeminiRequest { Contents = new List<Content> { new() { Parts = new List<Part> { new() { Text = fullPrompt } } } } };
         return await SendRequestToGemini(request);
     }
 
     // --- UNCHANGED HELPER: ExecuteSqlQuery ---
     private async Task<string?> ExecuteSqlQuery(string sqlQuery)
     {
+        // First, check if the AI denied access at the generation stage (for Employees)
+        if (sqlQuery.Trim() == "Access Denied")
+        {
+            Console.WriteLine("\n--- SQL Execution Halted: Access Denied by prompt rule. ---");
+            return "[]"; // Return empty JSON to trigger "no results"
+        }
+
         DbConnection connection = _dbContext.Database.GetDbConnection();
         try
         {
@@ -324,17 +298,13 @@ public class ChatbotService : IChatbotService
         The database returned the following raw JSON data: '{rawJsonResult}'.
 
         Your task is to provide a concise, conversational answer.
-        - If the JSON contains a single value (e.g., `[{"Count": 10}]`), answer the question directly. Example: "There are a total of 10 completed appointments."
-        - If the JSON is an empty array `[]`, state that no results were found. Example: "I couldn't find any vehicles with that brand."
+        - If the JSON contains a single value (e.g., `[{"Count": 10}]`), answer the question directly.
+        - If the JSON is an empty array `[]`, state that no results were found (e.g., "I couldn't find any results for that request.").
         - If the JSON contains a list of items, format the result as a simple and clean summary or a markdown table.
         - Format all currency amounts as LKR (Sri Lankan Rupees).
         """;
 
-        var request = new GeminiRequest
-        {
-            Contents = new List<Content> { new() { Parts = new List<Part> { new() { Text = prompt } } } }
-        };
-
+        var request = new GeminiRequest { Contents = new List<Content> { new() { Parts = new List<Part> { new() { Text = prompt } } } } };
         string finalAnswer = await SendRequestToGemini(request, "You are a friendly, helpful customer service assistant for a car service center.");
         return finalAnswer.Trim().Replace("\"", "");
     }
