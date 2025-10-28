@@ -16,10 +16,6 @@ namespace automobile_backend.Models.Entities
         public string Description { get; set; } = string.Empty;
 
 
-        public string? AdminResponse { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
         // Foreign Key for Appointment
         public int AppointmentId { get; set; }
 
