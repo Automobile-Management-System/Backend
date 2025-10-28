@@ -70,6 +70,10 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 // Register AI Chatbot Service
 builder.Services.AddHttpClient<IChatbotService, ChatbotService>();
 
+// Register Service Progress functionality
+builder.Services.AddScoped<IServiceProgressRepository, ServiceProgressRepository>();
+builder.Services.AddScoped<IServiceProgressService, ServiceProgressService>();
+
 // Configure CORS
 builder.Services.AddCors(options =>
 {
@@ -104,7 +108,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(options => 
+.AddJwtBearer(options =>
 {
     // ... (your existing JWT config is fine) ...
     options.Events = new JwtBearerEvents
@@ -127,25 +131,25 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 })
-.AddCookie(ExternalCookieAuthenticationScheme, options => 
+.AddCookie(ExternalCookieAuthenticationScheme, options =>
 {
     options.Cookie.SameSite = SameSiteMode.Lax;
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 })
-.AddGoogle(options => 
+.AddGoogle(options =>
 {
     options.ClientId = configuration["Google:ClientId"]!;
     options.ClientSecret = configuration["Google:ClientSecret"]!;
-   
-    
+
+
 
     // This is the dedicated path the Google middleware will listen on.
-    options.CallbackPath = "/api/Auth/signin-google"; 
-    
+    options.CallbackPath = "/api/Auth/signin-google";
+
     options.SignInScheme = ExternalCookieAuthenticationScheme;
 
     // This ensures the correlation cookie is sent correctly
-    options.CorrelationCookie.SameSite = SameSiteMode.Lax; 
+    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
     options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
@@ -173,7 +177,7 @@ if (app.Environment.IsDevelopment())
 // app.UseHttpsRedirection(); // Keep commented for local http development
 app.UseCors(MyAllowSpecificOrigins);
 
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
