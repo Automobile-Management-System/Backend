@@ -38,9 +38,7 @@ namespace automobile_backend.Services
                 title = r.Title,
                 description = r.Description,
                 requestType = "modification",
-                priority = "medium",
-                adminResponse = r.AdminResponse,
-                createdAt = r.CreatedAt
+                priority = "medium"
             });
         }
 
@@ -53,11 +51,7 @@ namespace automobile_backend.Services
                 return null;
             }
 
-            // Update modification request
-            request.AdminResponse = reviewDto.AdminResponse;
-
-            // Note: Status logic removed because entity has no Status field anymore
-
+            // Removed AdminResponse because it's not part of the entity anymore
             await _modificationRepository.UpdateAsync(request);
 
             return new
@@ -74,9 +68,7 @@ namespace automobile_backend.Services
                 description = request.Description,
                 requestType = "modification",
                 priority = "medium",
-                estimatedCost = reviewDto.EstimatedCost ?? 0,
-                adminResponse = request.AdminResponse,
-                createdAt = request.CreatedAt
+                estimatedCost = reviewDto.EstimatedCost ?? 0
             };
         }
     }

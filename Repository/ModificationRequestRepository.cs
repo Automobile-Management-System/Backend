@@ -21,7 +21,6 @@ namespace automobile_backend.Repository
             return await _context.ModificationRequests
                 .Include(m => m.Appointment)
                     .ThenInclude(a => a.User)
-                .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
         }
 
