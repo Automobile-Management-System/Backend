@@ -5,10 +5,11 @@ namespace automobile_backend.Controllers
     using System.Security.Claims;
     using automobile_backend.InterFaces.IServices;
     using automobile_backend.Models.DTOs;
-    using Microsoft.AspNetCore.Authorization;
-    using Microsoft.AspNetCore.Mvc;
+    using automobile_backend.Models.Entities;
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Authentication.Google;
+    using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Mvc;
 
     [Route("api/[controller]")]
     [ApiController]
@@ -35,22 +36,33 @@ namespace automobile_backend.Controllers
         [HttpPost("login/v1")]
         public async Task<IActionResult> Login(UserLoginDto request)
         {
-            var token = await _authService.LoginAsync(request);
-            if (token == null)
+            // MODIFIED: Get the tuple back
+            var (user, token) = await _authService.LoginAsync(request);
+
+            if (user == null || token == null)
             {
                 return Unauthorized("Invalid credentials.");
             }
 
-            // Set token in a secure, HttpOnly cookie
+            // Set token in a secure, HttpOnly cookie (unchanged)
             Response.Cookies.Append("jwt-token", token, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = false,
+                Secure = false, // TODO: Set to true in production
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddDays(1)
             });
 
-            return Ok(new { message = "Login successful" });
+            // MODIFIED: Return user data so frontend knows the role
+            var userDto = new
+            {
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                role = user.Role.ToString()
+            };
+
+            return Ok(userDto);
         }
 
         [HttpGet("google-login")]
@@ -69,10 +81,8 @@ namespace automobile_backend.Controllers
         {
             try
             {
-                // This logic is identical to your old GoogleCallback
                 var (user, jwtToken) = await _authService.HandleGoogleLoginAsync();
 
-                // Set our application's HttpOnly cookie
                 Response.Cookies.Append("jwt-token", jwtToken, new CookieOptions
                 {
                     HttpOnly = true,
@@ -81,12 +91,18 @@ namespace automobile_backend.Controllers
                     Expires = DateTime.UtcNow.AddDays(1)
                 });
 
-                // Redirect the user's browser back to the React app
-                return Redirect("http://localhost:3000/dashboard");
+                // MODIFIED: Redirect based on the user's role
+                string redirectUrl = user.Role switch
+                {
+                    Enums.Admin => "http://localhost:3000/admin/dashboard",
+                    Enums.Employee => "http://localhost:3000/employee/dashboard",
+                    _ => "http://localhost:3000/customer/dashboard" // Default to customer
+                };
+
+                return Redirect(redirectUrl);
             }
             catch (Exception ex)
             {
-                // Handle errors
                 return Redirect($"http://localhost:3000/login?error={Uri.EscapeDataString(ex.Message)}");
             }
         }
@@ -103,11 +119,30 @@ namespace automobile_backend.Controllers
         // --- Example Protected Endpoints ---
 
         [HttpGet("profile"), Authorize]
-        public IActionResult GetProfile()
+        public async Task<IActionResult> GetProfile()
         {
-            // Example of accessing user claims from the token
+            // MODIFIED: Return full user info
             var userEmail = User.FindFirstValue(ClaimTypes.Email);
-            return Ok($"Welcome {userEmail}! This is your profile.");
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return Unauthorized();
+            }
+
+            var user = await _authService.GetUserByEmailAsync(userEmail);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            var userDto = new
+            {
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                role = user.Role.ToString()
+            };
+
+            return Ok(userDto);
         }
 
         [HttpGet("admin-data"), Authorize(Roles = "Admin")]
