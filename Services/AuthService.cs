@@ -106,7 +106,8 @@ namespace automobile_backend.Services
                     LastName = claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value ?? string.Empty,
                     PasswordHash = null, // No password for Google users
                     PasswordSalt = null,
-                    Role = Enums.Customer // Set default role
+                    Role = Enums.Customer,
+                    Status = "Active"
                 };
                 user = await _authRepository.CreateUserAsync(user);
             }
