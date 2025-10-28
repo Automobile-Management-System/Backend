@@ -1,4 +1,6 @@
 using System.Text;
+using automobile_backend.Interfaces.IRepositories;
+using automobile_backend.Interfaces.IServices;
 using automobile_backend.InterFaces.IRepositories;
 using automobile_backend.InterFaces.IRepository;
 using automobile_backend.InterFaces.IServices;
@@ -63,8 +65,10 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 // Register Notification & Alerts
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
+
+
 // Register AI Chatbot Service
-builder.Services.AddScoped<IChatbotService, ChatbotService>();
+builder.Services.AddHttpClient<IChatbotService, ChatbotService>();
 
 // Register Service Progress functionality
 builder.Services.AddScoped<IServiceProgressRepository, ServiceProgressRepository>();
@@ -155,6 +159,9 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
     options.AddPolicy("Staff", policy => policy.RequireRole("Admin", "Employee"));
+
+    options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
+    options.AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee"));
 });
 
 // 4. Build the application

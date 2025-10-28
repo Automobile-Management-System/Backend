@@ -17,18 +17,18 @@
     public enum AppointmentStatus
     {
         Pending,
+        Upcoming,
         InProgress,
         Completed,
-        Cancelled,
         Rejected,
     }
 
     public enum ModificationStatus
     {
         Pending,
+        Upcoming,
         InProgress,
         Completed,
-        Cancelled,
         Rejected,
     }
 
@@ -38,6 +38,14 @@
         DebitCard,
         Cash,
         BankTransfer
+    }
+
+    public enum PaymentStatus
+    {
+        Pending,
+        Completed,
+        Failed,
+        Refunded
     }
 
     public enum Type
