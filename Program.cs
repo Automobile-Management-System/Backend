@@ -65,8 +65,10 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 // Register Notification & Alerts
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
+
+
 // Register AI Chatbot Service
-builder.Services.AddScoped<IChatbotService, ChatbotService>();
+builder.Services.AddHttpClient<IChatbotService, ChatbotService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -153,6 +155,9 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
     options.AddPolicy("Staff", policy => policy.RequireRole("Admin", "Employee"));
+
+    options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
+    options.AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee"));
 });
 
 // 4. Build the application
