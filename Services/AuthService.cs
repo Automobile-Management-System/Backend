@@ -45,28 +45,29 @@ namespace automobile_backend.Services
                 Address = request.Address,
                 PasswordHash = passwordHash,
                 PasswordSalt = passwordSalt,
-                Role = Enums.Customer // Default role
+                Role = Enums.Customer, // Default role
+                Status = "Active"
             };
 
             return await _authRepository.CreateUserAsync(user);
         }
 
-        public async Task<string?> LoginAsync(UserLoginDto request)
+        public async Task<(User? user, string? token)> LoginAsync(UserLoginDto request)
         {
             var user = await _authRepository.GetUserByEmailAsync(request.Email);
 
-            // Ensure user exists and has a password (not a Google-only user)
             if (user == null || user.PasswordHash == null || user.PasswordSalt == null)
             {
-                return null;
+                return (null, null); // Return tuple
             }
 
             if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
             {
-                return null; // Invalid credentials
+                return (null, null); // Return tuple
             }
 
-            return CreateJwtToken(user);
+            var token = CreateJwtToken(user);
+            return (user, token); // Return tuple
         }
 
         // --- Google Auth Method ---
@@ -106,7 +107,8 @@ namespace automobile_backend.Services
                     LastName = claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value ?? string.Empty,
                     PasswordHash = null, // No password for Google users
                     PasswordSalt = null,
-                    Role = Enums.Customer // Set default role
+                    Role = Enums.Customer,
+                    Status = "Active"
                 };
                 user = await _authRepository.CreateUserAsync(user);
             }
@@ -165,6 +167,11 @@ namespace automobile_backend.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);
+        }
+
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            return await _authRepository.GetUserByEmailAsync(email);
         }
     }
 }

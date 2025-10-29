@@ -5,8 +5,10 @@ using automobile_backend.InterFaces.IRepositories;
 using automobile_backend.InterFaces.IRepository;
 using automobile_backend.InterFaces.IServices;
 using automobile_backend.Repositories;
+using automobile_backend.Repositories.Interfaces;
 using automobile_backend.Repository;
 using automobile_backend.Services;
+using automobile_backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -69,8 +71,19 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 // Register Notification & Alerts
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
+
+
 // Register AI Chatbot Service
-builder.Services.AddScoped<IChatbotService, ChatbotService>();
+builder.Services.AddHttpClient<IChatbotService, ChatbotService>();
+
+// Register Service Progress functionality
+builder.Services.AddScoped<IServiceProgressRepository, ServiceProgressRepository>();
+builder.Services.AddScoped<IServiceProgressService, ServiceProgressService>();
+
+// Register ViewService functionality
+builder.Services.AddScoped<IViewServiceRepository, ViewServiceRepository>();
+builder.Services.AddScoped<IViewServiceService, ViewServiceService>();
+
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -106,7 +119,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(options => 
+.AddJwtBearer(options =>
 {
     // ... (your existing JWT config is fine) ...
     options.Events = new JwtBearerEvents
@@ -129,25 +142,25 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 })
-.AddCookie(ExternalCookieAuthenticationScheme, options => 
+.AddCookie(ExternalCookieAuthenticationScheme, options =>
 {
     options.Cookie.SameSite = SameSiteMode.Lax;
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 })
-.AddGoogle(options => 
+.AddGoogle(options =>
 {
     options.ClientId = configuration["Google:ClientId"]!;
     options.ClientSecret = configuration["Google:ClientSecret"]!;
-   
-    
+
+
 
     // This is the dedicated path the Google middleware will listen on.
-    options.CallbackPath = "/api/Auth/signin-google"; 
-    
+    options.CallbackPath = "/api/Auth/signin-google";
+
     options.SignInScheme = ExternalCookieAuthenticationScheme;
 
     // This ensures the correlation cookie is sent correctly
-    options.CorrelationCookie.SameSite = SameSiteMode.Lax; 
+    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
     options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
@@ -157,6 +170,9 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
     options.AddPolicy("Staff", policy => policy.RequireRole("Admin", "Employee"));
+
+    options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
+    options.AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee"));
 });
 
 // 4. Build the application
@@ -172,7 +188,7 @@ if (app.Environment.IsDevelopment())
 // app.UseHttpsRedirection(); // Keep commented for local http development
 app.UseCors(MyAllowSpecificOrigins);
 
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -47,5 +47,23 @@ namespace automobile_backend.Services
                 Year = v.Year
             }).ToList();
         }
+
+        public async Task<int> GetUpcomingAppointmentsCountAsync(int userId)
+            => await _repository.GetUpcomingAppointmentsCountAsync(userId);
+
+        public async Task<int> GetInProgressAppointmentsCountAsync(int userId)
+            => await _repository.GetInProgressAppointmentsCountAsync(userId);
+
+        public async Task<int> GetCompletedAppointmentsCountAsync(int userId)
+            => await _repository.GetCompletedAppointmentsCountAsync(userId);
+
+        public async Task<decimal> GetPendingPaymentsTotalAsync(int userId)
+            => await _repository.GetPendingPaymentsTotalAsync(userId);
+
+        public Task<IEnumerable<Appointment>> GetLatestServicesAsync(int userId)
+           => _repository.GetLatestServicesAsync(userId);
+
+        public Task<IEnumerable<Appointment>> GetLatestModificationsAsync(int userId)
+            => _repository.GetLatestModificationsAsync(userId);
     }
 }
