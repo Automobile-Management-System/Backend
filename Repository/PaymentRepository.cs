@@ -17,5 +17,19 @@ namespace automobile_backend.Repository
         {
             return await _context.Payments.ToListAsync();
         }
+
+        //added
+        public async Task<Payment?> GetByAppointmentIdAsync(int appointmentId)
+        {
+            return await _context.Payments
+                .FirstOrDefaultAsync(p => p.AppointmentId == appointmentId);
+        }
+
+        public async Task<Payment> UpdateAsync(Payment payment)
+        {
+            _context.Payments.Update(payment);
+            await _context.SaveChangesAsync();
+            return payment;
+        }
     }
 }
