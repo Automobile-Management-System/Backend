@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Stripe; 
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -170,6 +171,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CustomerOnly", policy => policy.RequireRole("Customer"));
     options.AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee"));
 });
+
+// Configure Stripe API Key
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 // 4. Build the application
 var app = builder.Build();
