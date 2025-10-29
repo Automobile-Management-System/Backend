@@ -13,7 +13,7 @@ namespace automobile_backend.Controllers
 
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // <-- IMPORTANT: Secures the entire controller
+    [AllowAnonymous] // <-- CHANGE: Allow unauthenticated requests initially
     public class ChatbotController : ControllerBase
     {
         private readonly IChatbotService _chatbotService;
@@ -25,12 +25,11 @@ namespace automobile_backend.Controllers
 
         /// <summary>
         /// Sends a natural language question to the AI chatbot.
-        /// Access is restricted based on the user's role (Admin, Employee, Customer).
+        /// Provides personalized responses for authenticated users and general info for guests.
         /// </summary>
         [HttpPost("ask")]
         [ProducesResponseType(typeof(string), 200)]
         [ProducesResponseType(400)]
-        [ProducesResponseType(401)] // Unauthorized
         public async Task<IActionResult> Ask([FromBody] ChatRequestDto request)
         {
             if (string.IsNullOrWhiteSpace(request.Question))
@@ -38,33 +37,54 @@ namespace automobile_backend.Controllers
                 return BadRequest("Question cannot be empty.");
             }
 
-            // --- NEW: Get User ID and Role from the JWT Token ---
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userRole = User.FindFirstValue(ClaimTypes.Role);
+            // --- Default values for Guest users ---
+            int userId = -1; // Use -1 or 0 to indicate guest
+            string userRole = "Guest";
+            string? userName = null; // Nullable for guest
 
-            if (string.IsNullOrEmpty(userIdString) || string.IsNullOrEmpty(userRole) || !int.TryParse(userIdString, out var userId))
+            // --- Check if the user IS Authenticated ---
+            if (User.Identity?.IsAuthenticated == true)
             {
-                return Unauthorized("Invalid user token. Unable to identify user.");
+                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var roleClaim = User.FindFirstValue(ClaimTypes.Role);
+                var nameClaim = User.FindFirstValue(ClaimTypes.Name); // Get user's name
+
+                // Try to parse UserId, role must exist for authenticated user
+                if (!string.IsNullOrEmpty(userIdString) && int.TryParse(userIdString, out var parsedUserId) && !string.IsNullOrEmpty(roleClaim))
+                {
+                    userId = parsedUserId;
+                    userRole = roleClaim;
+                    userName = nameClaim; // Assign the name if found
+                }
+                else
+                {
+                    // Handle case where token is present but claims are missing/invalid
+                    // You might want to log this or return a specific error
+                    // For now, treat as Guest for safety
+                    Console.WriteLine("Warning: Authenticated user has invalid/missing claims.");
+                    userRole = "Guest";
+                    userId = -1;
+                    userName = null;
+                }
             }
-            // ---------------------------------------------------
+            // ----------------------------------------
 
             try
             {
-                // Pass the user's identity to the service for data scoping
-                var answer = await _chatbotService.AnswerQuestionAsync(request.Question, userId, userRole);
+                // Pass user identity (including name) to the service
+                var answer = await _chatbotService.AnswerQuestionAsync(request.Question, userId, userRole, userName); // Pass userName
 
                 if (string.IsNullOrEmpty(answer))
                 {
-                    return Ok(new { Answer = "Sorry, I was unable to process your request. Check your query structure or the backend logs." });
+                    return Ok(new { Answer = "Sorry, I couldn't process that request right now." });
                 }
 
                 return Ok(new { Answer = answer });
             }
             catch (Exception ex)
             {
-                // Log exception
                 Console.WriteLine($"Chatbot Error: {ex.Message}");
-                return StatusCode(500, new { Answer = "An unexpected error occurred while processing your request." });
+                return StatusCode(500, new { Answer = "An unexpected error occurred." });
             }
         }
     }
