@@ -49,6 +49,9 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IModificationRequestRepository, ModificationRequestRepository>();
 builder.Services.AddScoped<IModificationRequestService, ModificationRequestService>();
 
+builder.Services.AddScoped<ICustomerModificationRequestRepository, CustomerModificationRequestRepository>();
+builder.Services.AddScoped<ICustomerModificationRequestService, CustomerModificationRequestService>();
+
 builder.Services.AddScoped<IEmployeeServiceWorkRepository, EmployeeServiceWorkRepository>();
 builder.Services.AddScoped<IEmployeeServiceWorkService, EmployeeServiceWorkService>();
 
