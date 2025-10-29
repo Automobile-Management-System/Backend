@@ -1,5 +1,5 @@
 using System.Text;
-using automobile_backend.Data; // <-- ADDED
+using automobile_backend.Data;
 using automobile_backend.InterFaces.IRepositories;
 using automobile_backend.InterFaces.IRepository;
 using automobile_backend.InterFaces.IServices;
@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Stripe; // <-- FIX 1: Added this using statement
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -173,6 +174,10 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Staff", policy => policy.RequireRole("Admin", "Employee"));
 });
 
+// Configure Stripe API Key
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
+
 // 4. Build the application
 var app = builder.Build();
 
@@ -186,7 +191,7 @@ if (app.Environment.IsDevelopment())
 // app.UseHttpsRedirection(); // Keep commented for local http development
 
 // This order is critical
-app.UseCors(MyAllowSpecificOrigins);
+app.UseCors(MyAllowSpecificOrigins); // <-- FIX 2: Use the named policy you defined above
 
 app.UseAuthentication(); 
 app.UseAuthorization();
