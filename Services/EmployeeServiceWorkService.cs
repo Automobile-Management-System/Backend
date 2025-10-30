@@ -1,6 +1,8 @@
 using automobile_backend.InterFaces.IRepository;
 using automobile_backend.InterFaces.IServices;
 using automobile_backend.Models.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace automobile_backend.Services
 {
@@ -16,6 +18,12 @@ namespace automobile_backend.Services
         public async Task<IEnumerable<TimeLog>> GetEmployeeWorkAsync()
         {
             return await _employeeWorkRepository.GetEmployeeWorkAsync();
+        }
+
+        // ✅ Added: Fetch assigned appointment counts
+        public async Task<IEnumerable<object>> GetEmployeeAssignedAppointmentCountsAsync()
+        {
+            return await _employeeWorkRepository.GetEmployeeAssignedAppointmentCountsAsync();
         }
     }
 }
