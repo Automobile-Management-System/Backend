@@ -64,6 +64,10 @@ builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IServiceAnalyticsRepository, ServiceAnalyticsRepository>();
 builder.Services.AddScoped<IServiceAnalyticsService, ServiceAnalyticsService>();
 
+// Register Admin Dashboard
+builder.Services.AddScoped<IAdminDashboardRepository, AdminDashboardRepository>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+
 // Register Payment & Billing System
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
