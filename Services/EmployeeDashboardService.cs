@@ -32,6 +32,17 @@ namespace automobile_backend.Services
             return await _repository.GetTodayRecentModificationsAsync(employeeId);
         }
 
+        public async Task<int> GetCompletedServiceCountAsync(int employeeId)
+        {
+            return await _repository.GetCompletedServiceCountAsync(employeeId);
+        }
+
+        public async Task<int> GetCompletedModificationCountAsync(int employeeId)
+        {
+            return await _repository.GetCompletedModificationCountAsync(employeeId);
+        }
+
+
 
     }
 }

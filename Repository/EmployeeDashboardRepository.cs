@@ -91,6 +91,35 @@ namespace automobile_backend.Repository
             return modifications;
         }
 
+        public async Task<int> GetCompletedServiceCountAsync(int employeeId)
+        {
+            var count = await _context.EmployeeAppointments
+                .Include(ea => ea.Appointment)
+                    .ThenInclude(a => a.AppointmentServices)
+                .Where(ea =>
+                    ea.UserId == employeeId &&
+                    ea.Appointment.Status == AppointmentStatus.Completed &&
+                    ea.Appointment.AppointmentServices.Any())
+                .CountAsync();
+
+            return count;
+        }
+
+        public async Task<int> GetCompletedModificationCountAsync(int employeeId)
+        {
+            var count = await _context.EmployeeAppointments
+                .Include(ea => ea.Appointment)
+                    .ThenInclude(a => a.ModificationRequests)
+                .Where(ea =>
+                    ea.UserId == employeeId &&
+                    ea.Appointment.Status == AppointmentStatus.Completed &&
+                    ea.Appointment.ModificationRequests.Any())
+                .CountAsync();
+
+            return count;
+        }
+
+
 
 
     }

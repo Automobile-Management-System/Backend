@@ -17,7 +17,7 @@ namespace automobile_backend.Controllers
             _employeeDashboardService = employeeDashboardService;
         }
 
-        [HttpGet("appointments/today")]
+        [HttpGet("appointments/today/upcoming-count")]
         public async Task<IActionResult> GetTodayUpcomingAppointmentsForLoggedEmployee()
         {
            
@@ -39,7 +39,7 @@ namespace automobile_backend.Controllers
             });
         }
 
-        [HttpGet("appointments/inprogress")]
+        [HttpGet("appointments/inprogress-count")]
         public async Task<IActionResult> GetInProgressAppointmentsForLoggedEmployee()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -59,6 +59,48 @@ namespace automobile_backend.Controllers
                 InProgressAppointmentCount = count
             });
         }
+
+        [HttpGet("appointments/completed/services-count")]
+        public async Task<IActionResult> GetCompletedServiceCount()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized(new { message = "User ID not found in token." });
+            }
+
+            int employeeId = int.Parse(userIdClaim);
+            var count = await _employeeDashboardService.GetCompletedServiceCountAsync(employeeId);
+
+            return Ok(new
+            {
+                EmployeeId = employeeId,
+                Status = "Completed",
+                CompletedServiceCount = count
+            });
+        }
+
+
+        [HttpGet("appointments/completed/modifications-count")]
+        public async Task<IActionResult> GetCompletedModificationCount()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized(new { message = "User ID not found in token." });
+            }
+
+            int employeeId = int.Parse(userIdClaim);
+            var count = await _employeeDashboardService.GetCompletedModificationCountAsync(employeeId);
+
+            return Ok(new
+            {
+                EmployeeId = employeeId,
+                Status = "Completed",
+                CompletedModificationCount = count
+            });
+        }
+
 
 
         [HttpGet("appointments/today/recent-services")]

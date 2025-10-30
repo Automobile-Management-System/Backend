@@ -11,6 +11,9 @@ namespace automobile_backend.InterFaces.IRepository
         Task<List<object>> GetTodayRecentServicesAsync(int employeeId);
 
         Task<List<object>> GetTodayRecentModificationsAsync(int employeeId);
+        Task<int> GetCompletedServiceCountAsync(int employeeId);
+        Task<int> GetCompletedModificationCountAsync(int employeeId);
+
 
 
     }
