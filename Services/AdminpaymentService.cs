@@ -19,5 +19,11 @@ namespace automobile_backend.Services
             return await _repository.GetAllPaymentsWithCustomerDetailsAsync();
         }
 
+        public async Task<bool> UpdatePaymentStatusAsync(int paymentId, PaymentStatus newStatus)
+        {
+            // You can add any business logic here (e.g., logging)
+            return await _repository.UpdatePaymentStatusAsync(paymentId, newStatus);
+        }
+
     }
 }

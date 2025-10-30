@@ -64,5 +64,22 @@ namespace automobile_backend.Repositories
 
             return paymentDetails;
         }
+
+        public async Task<bool> UpdatePaymentStatusAsync(int paymentId, PaymentStatus newStatus)
+        {
+
+            var payment = await _context.Payments.FindAsync(paymentId);
+
+            if (payment == null)
+            {
+
+                return false;
+            }
+
+            payment.Status = newStatus;
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

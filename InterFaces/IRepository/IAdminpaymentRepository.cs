@@ -7,5 +7,7 @@ namespace automobile_backend.Repositories
     {
         Task<IEnumerable<AdminPaymentDetailDto>> GetAllPaymentsWithCustomerDetailsAsync();
 
+        Task<bool> UpdatePaymentStatusAsync(int paymentId, PaymentStatus newStatus);
+
     }
 }
