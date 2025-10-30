@@ -15,10 +15,14 @@ namespace automobile_backend.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
+        // --- NEW ---
+        private readonly IInvoiceService _invoiceService;
 
-        public PaymentController(IPaymentService paymentService)
+        // --- UPDATED ---
+        public PaymentController(IPaymentService paymentService, IInvoiceService invoiceService)
         {
             _paymentService = paymentService;
+            _invoiceService = invoiceService; // Inject new service
         }
 
         // GET /api/payments
@@ -89,6 +93,34 @@ namespace automobile_backend.Controllers
             }
             catch (Exception ex)
             {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // --- NEW ---
+        // GET /api/payments/{appointmentId}/invoice
+        // Generates and returns a PDF invoice
+        [HttpGet("{appointmentId}/invoice")]
+        public async Task<IActionResult> GetInvoice(int appointmentId)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId))
+            {
+                return Unauthorized(new { message = "Invalid user token." });
+            }
+
+            try
+            {
+                // Call the service to generate the PDF
+                var pdfBytes = await _invoiceService.GenerateInvoiceAsync(appointmentId, userId);
+                
+                // Return the PDF as a file download
+                string invoiceNumber = $"INV-{appointmentId:D5}";
+                return File(pdfBytes, "application/pdf", $"{invoiceNumber}.pdf");
+            }
+            catch (Exception ex)
+            {
+                // Handle errors like "Unauthorized" or "Not Found"
                 return BadRequest(new { message = ex.Message });
             }
         }

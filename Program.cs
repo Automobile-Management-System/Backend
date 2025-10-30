@@ -13,7 +13,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Stripe;
+using automobile_backend.InterFaces.IServices;
+using Stripe; 
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -66,6 +68,9 @@ builder.Services.AddScoped<IServiceAnalyticsService, ServiceAnalyticsService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 
+// Register the new Invoice Service
+builder.Services.AddScoped<IInvoiceService, automobile_backend.Services.InvoiceService>();
+
 // Register Notification & Alerts
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
@@ -81,6 +86,8 @@ builder.Services.AddScoped<IServiceProgressService, ServiceProgressService>();
 // Register ViewService functionality
 builder.Services.AddScoped<IViewServiceRepository, ViewServiceRepository>();
 builder.Services.AddScoped<IViewServiceService, ViewServiceService>();
+
+builder.Services.AddScoped<ICloudStorageService, CloudStorageService>();
 
 
 // Configure CORS
@@ -175,6 +182,8 @@ builder.Services.AddAuthorization(options =>
 
 // Configure Stripe API Key
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 // 4. Build the application
 var app = builder.Build();
