@@ -17,7 +17,6 @@ namespace automobile_backend.Controllers
             _service = service;
         }
 
-        // Add employee user
         [HttpPost("add-employee")]
         public async Task<IActionResult> AddEmployee([FromBody] UserRegisterDto dto)
         {
@@ -26,15 +25,19 @@ namespace automobile_backend.Controllers
             return Ok(result);
         }
 
-        // Get all users (summary)
+        //Get all users with search, role filter, and pagination
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers(
+            [FromQuery] string? search,
+            [FromQuery] string? role,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
         {
-            var users = await _service.GetAllUsersAsync();
+            if (pageSize > 10) pageSize = 10; // Max limit
+            var users = await _service.GetUsersAsync(search, role, pageNumber, pageSize);
             return Ok(users);
         }
 
-        // Get single user details
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
@@ -43,7 +46,6 @@ namespace automobile_backend.Controllers
             return Ok(user);
         }
 
-        // Update user
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateDto dto)
         {
@@ -52,7 +54,6 @@ namespace automobile_backend.Controllers
             return Ok(updated);
         }
 
-        // Activate user
         [HttpPut("activate/{id}")]
         public async Task<IActionResult> ActivateUser(int id)
         {
@@ -60,12 +61,44 @@ namespace automobile_backend.Controllers
             return success ? Ok("User activated") : NotFound();
         }
 
-        // Deactivate user
         [HttpPut("deactivate/{id}")]
         public async Task<IActionResult> DeactivateUser(int id)
         {
             var success = await _service.DeactivateUserAsync(id);
             return success ? Ok("User deactivated") : NotFound();
         }
+
+        // total count
+        [HttpGet("count/total")]
+        public async Task<IActionResult> GetTotalUsersCount()
+        {
+            var count = await _service.GetTotalUsersCountAsync();
+            return Ok(count);
+        }
+
+        // active count
+        [HttpGet("count/active")]
+        public async Task<IActionResult> GetActiveUsersCount()
+        {
+            var count = await _service.GetActiveUsersCountAsync();
+            return Ok(count);
+        }
+
+        // active customer count
+        [HttpGet("count/active-customers")]
+        public async Task<IActionResult> GetActiveCustomersCount()
+        {
+            var count = await _service.GetActiveCustomersCountAsync();
+            return Ok(count);
+        }
+
+        // active employee count
+        [HttpGet("count/active-employees")]
+        public async Task<IActionResult> GetActiveEmployeesCount()
+        {
+            var count = await _service.GetActiveEmployeesCountAsync();
+            return Ok(count);
+        }
+
     }
 }
