@@ -91,6 +91,9 @@ builder.Services.AddScoped<IServiceProgressService, ServiceProgressService>();
 builder.Services.AddScoped<IViewServiceRepository, ViewServiceRepository>();
 builder.Services.AddScoped<IViewServiceService, ViewServiceService>();
 
+builder.Services.AddScoped<IAdminpaymentService, AdminpaymentService>();
+builder.Services.AddScoped<IAdminpaymentRepository, AdminpaymentRepository>();
+
 builder.Services.AddScoped<ICloudStorageService, CloudStorageService>();
 
 
@@ -107,7 +110,11 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 // Configure Swagger to use JWT
