@@ -17,7 +17,18 @@ namespace automobile_backend.Repository
 
         public async Task<IEnumerable<Appointment>> GetAllAsync()
         {
-            return await _context.Appointments.ToListAsync();
+            return await _context.Appointments
+                .Include(a => a.User)
+                .Include(a => a.AppointmentServices)
+                    .ThenInclude(aps => aps.Service)
+                .ToListAsync();
+        }
+
+        public async Task<Appointment> AddAsync(Appointment appointment)
+        {
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
+            return appointment;
         }
     }
 }
