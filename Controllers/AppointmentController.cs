@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace automobile_backend.Controllers
 {
@@ -25,6 +26,41 @@ namespace automobile_backend.Controllers
             var appointments = await _appointmentService.GetAllAppointmentsAsync();
             
             // Map to DTOs to avoid circular references
+            var appointmentDtos = appointments.Select(a => new AppointmentResponseDto
+            {
+                AppointmentId = a.AppointmentId,
+                DateTime = a.DateTime,
+                Status = a.Status,
+                UserId = a.UserId,
+                UserName = a.User != null ? $"{a.User.FirstName} {a.User.LastName}" : "Unknown",
+                Services = a.AppointmentServices?.Select(aps => new ServiceDto
+                {
+                    ServiceId = aps.Service.ServiceId,
+                    ServiceName = aps.Service.ServiceName,
+                    BasePrice = aps.Service.BasePrice
+                }).ToList() ?? new List<ServiceDto>()
+            }).ToList();
+            
+            return Ok(appointmentDtos);
+        }
+
+        [HttpGet("my-appointments")]
+        [Authorize]
+        public async Task<IActionResult> GetMyAppointments()
+        {
+            // Get user ID from JWT claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("userId");
+            
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { message = "User ID not found in token." });
+            }
+
+            var appointments = (await _appointmentService.GetAllAppointmentsAsync())
+                .Where(a => a.UserId == userId)
+                .ToList();
+            
+            // Map to DTOs
             var appointmentDtos = appointments.Select(a => new AppointmentResponseDto
             {
                 AppointmentId = a.AppointmentId,
