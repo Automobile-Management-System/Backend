@@ -22,10 +22,10 @@ namespace automobile_backend.Controllers
 private readonly IEmployeeServiceWorkService _employeeService;
         public AdminModificationReqController(
             IModificationRequestService service,
-            IEmployeeServiceWorkService employeeService) // ✅ Inject it
+            IEmployeeServiceWorkService employeeService) 
         {
             _service = service;
-            _employeeService = employeeService; // ✅ Assign it
+            _employeeService = employeeService; 
         }
 
        [HttpGet]
@@ -61,7 +61,7 @@ public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQue
             }
         }
 
-              // ✅ New endpoint: Get assigned appointments count for employees
+              //  New endpoint: Get assigned appointments count for employees
         [HttpGet("assigned-appointments")]
         public async Task<IActionResult> GetEmployeeAssignedAppointmentCounts()
         {

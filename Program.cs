@@ -104,6 +104,9 @@ builder.Services.AddScoped<IAdminpaymentRepository, AdminpaymentRepository>();
 
 builder.Services.AddScoped<ICloudStorageService, CloudStorageService>();
 
+//added
+builder.Services.AddScoped<IServiceAppointmentRepository, ServiceAppointmentRepository>();
+builder.Services.AddScoped<IServiceAppointmentService, ServiceAppointmentService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
