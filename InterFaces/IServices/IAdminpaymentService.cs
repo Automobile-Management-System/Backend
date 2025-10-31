@@ -5,7 +5,7 @@ namespace automobile_backend.Services
 {
     public interface IAdminpaymentService
     {
-        Task<IEnumerable<AdminPaymentDetailDto>> GetAllPaymentsAsync();
+        Task<(IEnumerable<AdminPaymentDetailDto> Items, int TotalCount)> GetAllPaymentsAsync(int pageNumber, int pageSize);
 
         Task<bool> UpdatePaymentStatusAsync(int paymentId, PaymentStatus newStatus);
     }

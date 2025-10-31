@@ -15,20 +15,23 @@ namespace automobile_backend.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<AdminPaymentDetailDto>> GetAllPaymentsWithCustomerDetailsAsync()
+        public async Task<(IEnumerable<AdminPaymentDetailDto> Items, int TotalCount)> GetAllPaymentsWithCustomerDetailsAsync(int pageNumber, int pageSize)
         {
-            var paymentDetails = await _context.Payments
-                // Include the path to the User for customer details
+            // 1. Build the base query with all includes
+            var query = _context.Payments
                 .Include(p => p.Appointment)
                     .ThenInclude(a => a.User)
-                // Include the path to Service names
                 .Include(p => p.Appointment)
                     .ThenInclude(a => a.AppointmentServices)
                         .ThenInclude(aps => aps.Service)
-                // Include the path to Modification titles
                 .Include(p => p.Appointment)
-                    .ThenInclude(a => a.ModificationRequests)
+                    .ThenInclude(a => a.ModificationRequests);
 
+            // 2. Get the total count *before* pagination
+            var totalCount = await query.CountAsync();
+
+            // 3. Project, Order, Paginate, and Execute
+            var paymentDetails = await query
                 .Select(p => new AdminPaymentDetailDto
                 {
                     // Payment Details
@@ -41,7 +44,7 @@ namespace automobile_backend.Repositories
 
                     // Appointment Info
                     AppointmentId = p.AppointmentId,
-                    AppointmentType = p.Appointment.Type.ToString(), // Get the enum string
+                    AppointmentType = p.Appointment.Type.ToString(),
 
                     // Customer Details
                     CustomerId = p.Appointment.User.UserId,
@@ -50,19 +53,22 @@ namespace automobile_backend.Repositories
                     CustomerEmail = p.Appointment.User.Email,
                     CustomerPhoneNumber = p.Appointment.User.PhoneNumber,
 
-                    // NEW: Conditionally populate ServiceNames or ModificationTitles
+                    // Conditional population
                     ServiceNames = (p.Appointment.Type == Models.Entities.Type.Service)
                         ? p.Appointment.AppointmentServices.Select(aps => aps.Service.ServiceName)
-                        : new List<string>(), // Return empty list if not a Service type
+                        : new List<string>(),
 
                     ModificationTitles = (p.Appointment.Type == Models.Entities.Type.Modifications)
                         ? p.Appointment.ModificationRequests.Select(mr => mr.Title)
-                        : new List<string>() // Return empty list if not a Modification type
+                        : new List<string>()
                 })
-                .OrderByDescending(p => p.PaymentDateTime)
+                .OrderByDescending(p => p.PaymentDateTime) // Order must be applied *before* Skip/Take
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            return paymentDetails;
+            // 4. Return the tuple
+            return (paymentDetails, totalCount);
         }
 
         public async Task<bool> UpdatePaymentStatusAsync(int paymentId, PaymentStatus newStatus)

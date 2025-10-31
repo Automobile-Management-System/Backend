@@ -13,10 +13,9 @@ namespace automobile_backend.Services
             _repository = repository;
         }
 
-        public async Task<IEnumerable<AdminPaymentDetailDto>> GetAllPaymentsAsync()
+        public async Task<(IEnumerable<AdminPaymentDetailDto> Items, int TotalCount)> GetAllPaymentsAsync(int pageNumber, int pageSize)
         {
-            // You can add any business logic here (e.g., logging)
-            return await _repository.GetAllPaymentsWithCustomerDetailsAsync();
+            return await _repository.GetAllPaymentsWithCustomerDetailsAsync(pageNumber, pageSize);
         }
 
         public async Task<bool> UpdatePaymentStatusAsync(int paymentId, PaymentStatus newStatus)

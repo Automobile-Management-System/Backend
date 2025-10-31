@@ -2,6 +2,7 @@
 using automobile_backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace automobile_backend.Controllers
 {
     [Route("api/admin/payments")]
@@ -10,23 +11,31 @@ namespace automobile_backend.Controllers
     {
         private readonly IAdminpaymentService _paymentService;
 
+        // Define the page size constant
+        private const int DefaultPageSize = 10;
+
         public AdminpaymentController(IAdminpaymentService paymentService)
         {
             _paymentService = paymentService;
         }
 
-        /// <summary>
-        /// Gets a list of all payments with associated customer details.
-        /// </summary>
-        /// <returns>A list of payment details.</returns>
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<AdminPaymentDetailDto>), 200)]
         [ProducesResponseType(500)]
-        public async Task<ActionResult<IEnumerable<AdminPaymentDetailDto>>> GetAllPayments()
+        // MODIFIED: Accepts pageNumber from query string, defaults to 1
+        public async Task<ActionResult<IEnumerable<AdminPaymentDetailDto>>> GetAllPayments([FromQuery] int pageNumber = 1)
         {
             try
             {
-                var payments = await _paymentService.GetAllPaymentsAsync();
+                // Call the service with pagination
+                var (payments, totalCount) = await _paymentService.GetAllPaymentsAsync(pageNumber, DefaultPageSize);
+
+                // Add the total count to the response header
+                Response.Headers["X-Total-Count"] = totalCount.ToString();
+
+                // IMPORTANT: Expose the header so the frontend can read it (CORS)
+                Response.Headers["Access-Control-Expose-Headers"] = "X-Total-Count";
+
                 return Ok(payments);
             }
             catch (Exception ex)
