@@ -15,8 +15,6 @@ namespace automobile_backend.Models.Entities
         [Required]
         public string Description { get; set; } = string.Empty;
 
-        [Required]
-        public ModificationStatus Status { get; set; }
 
         // Foreign Key for Appointment
         public int AppointmentId { get; set; }

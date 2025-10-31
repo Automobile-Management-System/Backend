@@ -16,19 +16,20 @@
 
     public enum AppointmentStatus
     {
-        Scheduled,
+        Pending,
+        Upcoming,
         InProgress,
         Completed,
-        Cancelled,
-        PendingApproval
+        Rejected,
     }
 
     public enum ModificationStatus
     {
-        Requested,
-        Approved,
+        Pending,
+        Upcoming,
+        InProgress,
+        Completed,
         Rejected,
-        Completed
     }
 
     public enum PaymentMethod
@@ -37,5 +38,29 @@
         DebitCard,
         Cash,
         BankTransfer
+    }
+
+    public enum PaymentStatus
+    {
+        Pending,
+        Completed,
+        Failed,
+        Refunded
+    }
+
+    public enum SlotsTime
+    {
+        EightAm,
+        TenAm,
+        TwelvePm,
+        OnePm,
+        ThreePm,
+        FivePm
+    }
+
+    public enum Type
+    {
+        Modifications,
+        Service 
     }
 }
