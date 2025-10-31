@@ -152,5 +152,28 @@ namespace automobile_backend.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        [HttpGet("report")]
+        [ProducesResponseType(typeof(FileContentResult), 200)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetPaymentsReport(
+            [FromQuery] string? search = null,
+            [FromQuery] PaymentStatus? status = null,
+            [FromQuery] PaymentMethod? paymentMethod = null)
+        {
+            try
+            {
+                // Call a new service method to generate the report
+                var (pdfBytes, fileName) = await _paymentService.GeneratePaymentsReportAsync(search, status, paymentMethod);
+
+                // Return the PDF as a file
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+        //
     }
 }

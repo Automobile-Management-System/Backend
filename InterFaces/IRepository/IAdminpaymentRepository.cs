@@ -17,6 +17,9 @@ namespace automobile_backend.Repositories
         Task<decimal> GetTotalRevenueAsync();
         Task<int> GetPaymentCountByStatusAsync(PaymentStatus status);
 
-        
+        Task<IEnumerable<AdminPaymentDetailDto>> GetAllFilteredPaymentsForReportAsync(
+            string? search,
+            PaymentStatus? status,
+            PaymentMethod? paymentMethod);
     }
 }

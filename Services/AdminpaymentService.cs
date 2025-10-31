@@ -2,14 +2,16 @@
 using automobile_backend.Models.DTOs;
 using automobile_backend.Models.Entities;
 using automobile_backend.Repositories;
-using Stripe; // This causes the conflict
-using System; // Added for Exception
-using System.Collections.Generic; // Added for IEnumerable
-using System.Threading.Tasks; // Added for Task
+using Stripe;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+// --- ADD THESE 2 USING DIRECTIVES ---
+using automobile_backend.Services.ReportTemplates; // <-- This one finds PaymentsReportDocument
+using QuestPDF.Fluent; // <-- This one finds .GeneratePdf()
 
 // --- ADD THIS ALIAS ---
-// We are telling the compiler that "Entities" in this file
-// means this specific namespace.
 using Entities = automobile_backend.Models.Entities;
 
 namespace automobile_backend.Services
@@ -25,13 +27,12 @@ namespace automobile_backend.Services
             _invoiceService = invoiceService;
         }
 
-        // --- UPDATE THE SIGNATURE HERE ---
         public async Task<(IEnumerable<AdminPaymentDetailDto> Items, int TotalCount)> GetAllPaymentsAsync(
             int pageNumber,
             int pageSize,
             string? search,
-            Entities.PaymentStatus? status, // <-- Use the alias
-            Entities.PaymentMethod? paymentMethod) // <-- Use the alias
+            Entities.PaymentStatus? status,
+            Entities.PaymentMethod? paymentMethod)
         {
             return await _repository.GetAllPaymentsWithCustomerDetailsAsync(
                 pageNumber,
@@ -42,13 +43,11 @@ namespace automobile_backend.Services
             );
         }
 
-        // --- UPDATE THE SIGNATURE HERE ---
-        public async Task<bool> UpdatePaymentStatusAsync(int paymentId, Entities.PaymentStatus newStatus) // <-- Use the alias
+        public async Task<bool> UpdatePaymentStatusAsync(int paymentId, Entities.PaymentStatus newStatus)
         {
             string? invoiceUrl = null;
 
-            // --- UPDATE THE COMPARISON HERE ---
-            if (newStatus == Entities.PaymentStatus.Completed) // <-- Use the alias
+            if (newStatus == Entities.PaymentStatus.Completed)
             {
                 try
                 {
@@ -63,27 +62,44 @@ namespace automobile_backend.Services
             return await _repository.UpdatePaymentStatusAsync(paymentId, newStatus, invoiceUrl);
         }
 
+
+        public async Task<(byte[] pdfBytes, string fileName)> GeneratePaymentsReportAsync(
+            string? search,
+            Entities.PaymentStatus? status,
+            Entities.PaymentMethod? paymentMethod)
+        {
+            // 1. Get ALL filtered data from the new repo method
+            var payments = await _repository.GetAllFilteredPaymentsForReportAsync(search, status, paymentMethod);
+
+            // 2. Create the PDF document (This now works)
+            var document = new PaymentsReportDocument(payments, search, status, paymentMethod);
+
+            // 3. Generate the PDF bytes (This now works)
+            byte[] pdfBytes = document.GeneratePdf();
+
+            string fileName = $"Payments_Report_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+
+            return (pdfBytes, fileName);
+        }
+
         public async Task<decimal> GetTotalRevenueAsync()
         {
             return await _repository.GetTotalRevenueAsync();
         }
 
-        // --- UPDATE THE ENUM ACCESS HERE ---
         public async Task<int> GetPendingCountAsync()
         {
-            return await _repository.GetPaymentCountByStatusAsync(Entities.PaymentStatus.Pending); // <-- Use the alias
+            return await _repository.GetPaymentCountByStatusAsync(Entities.PaymentStatus.Pending);
         }
 
-        // --- UPDATE THE ENUM ACCESS HERE ---
         public async Task<int> GetCompletedCountAsync()
         {
-            return await _repository.GetPaymentCountByStatusAsync(Entities.PaymentStatus.Completed); // <-- Use the alias
+            return await _repository.GetPaymentCountByStatusAsync(Entities.PaymentStatus.Completed);
         }
 
-        // --- UPDATE THE ENUM ACCESS HERE ---
         public async Task<int> GetFailedCountAsync()
         {
-            return await _repository.GetPaymentCountByStatusAsync(Entities.PaymentStatus.Failed); // <-- Use the alias
+            return await _repository.GetPaymentCountByStatusAsync(Entities.PaymentStatus.Failed);
         }
     }
 }
