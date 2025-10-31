@@ -64,6 +64,9 @@ builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IServiceAnalyticsRepository, ServiceAnalyticsRepository>();
 builder.Services.AddScoped<IServiceAnalyticsService, ServiceAnalyticsService>();
 
+builder.Services.AddScoped<IProfileManagementRepository, ProfileManagementRepository>();
+builder.Services.AddScoped<IProfileManagementService, ProfileManagementService>();
+
 // Register Admin Dashboard
 builder.Services.AddScoped<IAdminDashboardRepository, AdminDashboardRepository>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
