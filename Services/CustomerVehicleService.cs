@@ -46,7 +46,7 @@ namespace automobile_backend.Services
             };
         }
 
-        public async Task<bool> AddVehicleAsync(int userId, CustomerVehicleDto dto)
+        public async Task<bool> AddVehicleAsync(int userId, CreateVehicleDto dto)
         {
             var vehicle = new CustomerVehicle
             {

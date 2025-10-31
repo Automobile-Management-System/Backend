@@ -21,7 +21,7 @@ namespace automobile_backend.Controllers
 
         // add vehicles
         [HttpPost("vehicles")]
-        public async Task<IActionResult> AddVehicle([FromBody] CustomerVehicleDto dto)
+        public async Task<IActionResult> AddVehicle([FromBody] CreateVehicleDto dto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)

@@ -39,7 +39,7 @@ namespace automobile_backend.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddVehicle([FromBody] CustomerVehicleDto dto)
+        public async Task<IActionResult> AddVehicle([FromBody] CreateVehicleDto dto)
         {
             var userId = GetUserId();
             await _vehicleService.AddVehicleAsync(userId, dto);
