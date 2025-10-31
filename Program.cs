@@ -62,6 +62,13 @@ builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IServiceAnalyticsRepository, ServiceAnalyticsRepository>();
 builder.Services.AddScoped<IServiceAnalyticsService, ServiceAnalyticsService>();
 
+builder.Services.AddScoped<ICustomerModificationRequestRepository, CustomerModificationRequestRepository>();
+builder.Services.AddScoped<ICustomerModificationRequestService, CustomerModificationRequestService>();
+
+builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
+
+
 // Register Payment & Billing System
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();

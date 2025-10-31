@@ -22,5 +22,7 @@ namespace automobile_backend.Models.Entities
         // Navigation property to the Appointment
         [ForeignKey("AppointmentId")]
         public Appointment Appointment { get; set; }
+
+        public ModificationStatus Status { get; set; } = ModificationStatus.Pending;
     }
 }
