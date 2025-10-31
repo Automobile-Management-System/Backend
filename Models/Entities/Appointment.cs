@@ -11,6 +11,8 @@ namespace automobile_backend.Models.Entities
         [Required]
         public DateTime DateTime { get; set; }
 
+        public SlotsTime SlotsTime { get; set; }
+
         [Required]
         public AppointmentStatus Status { get; set; }
 

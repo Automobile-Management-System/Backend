@@ -16,7 +16,6 @@ namespace automobile_backend.Repositories
             _context = context;
         }
 
-        // Add Employee User
         public async Task<User> AddEmployeeAsync(UserRegisterDto dto)
         {
             using var hmac = new HMACSHA512();
@@ -43,12 +42,46 @@ namespace automobile_backend.Repositories
             return await _context.Users.FindAsync(id);
         }
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        //Search + Filter + Pagination
+        public async Task<PagedResult<User>> GetUsersAsync(string? search, Enums? role, int pageNumber, int pageSize)
         {
-            return await _context.Users.ToListAsync();
+            var query = _context.Users.AsQueryable();
+
+            // Filter by search
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string normalized = search.ToLower();
+                query = query.Where(u =>
+                    u.FirstName.ToLower().Contains(normalized) ||
+                    u.LastName.ToLower().Contains(normalized) ||
+                    u.Email.ToLower().Contains(normalized));
+            }
+
+            // Filter by role
+            if (role.HasValue)
+            {
+                query = query.Where(u => u.Role == role.Value);
+            }
+
+            // Count total
+            int totalCount = await query.CountAsync();
+
+            // Pagination
+            var items = await query
+                .OrderBy(u => u.UserId)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<User>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
 
-        // Update selected user
         public async Task<User?> UpdateUserAsync(int id, UserUpdateDto dto)
         {
             var user = await _context.Users.FindAsync(id);
@@ -66,7 +99,6 @@ namespace automobile_backend.Repositories
             return user;
         }
 
-        // Activate User
         public async Task<bool> ActivateUserAsync(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -77,7 +109,6 @@ namespace automobile_backend.Repositories
             return true;
         }
 
-        // Deactivate User
         public async Task<bool> DeactivateUserAsync(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -87,5 +118,26 @@ namespace automobile_backend.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<int> GetTotalUsersCountAsync()
+        {
+            return await _context.Users.CountAsync();
+        }
+
+        public async Task<int> GetActiveUsersCountAsync()
+        {
+            return await _context.Users.CountAsync(u => u.Status == "Active");
+        }
+
+        public async Task<int> GetActiveCustomersCountAsync()
+        {
+            return await _context.Users.CountAsync(u => u.Status == "Active" && u.Role == Enums.Customer);
+        }
+
+        public async Task<int> GetActiveEmployeesCountAsync()
+        {
+            return await _context.Users.CountAsync(u => u.Status == "Active" && u.Role == Enums.Employee);
+        }
+
     }
 }
