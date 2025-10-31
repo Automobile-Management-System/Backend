@@ -18,10 +18,12 @@ namespace automobile_backend.Repository
             return await _context.Payments.ToListAsync();
         }
 
-        //added
+        // UPDATED - Eagerly loads Appointment and User for validation
         public async Task<Payment?> GetByAppointmentIdAsync(int appointmentId)
         {
             return await _context.Payments
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.User) // Include User for email
                 .FirstOrDefaultAsync(p => p.AppointmentId == appointmentId);
         }
 
@@ -30,6 +32,16 @@ namespace automobile_backend.Repository
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
             return payment;
+        }
+
+        // NEW - Implementation for getting user-specific payments
+        public async Task<IEnumerable<Payment>> GetPaymentsForUserAsync(int userId)
+        {
+            return await _context.Payments
+                .Include(p => p.Appointment) // Include Appointment details
+                .Where(p => p.Appointment.UserId == userId)
+                .OrderByDescending(p => p.Appointment.DateTime)
+                .ToListAsync();
         }
     }
 }

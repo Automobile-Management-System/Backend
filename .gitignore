@@ -15,6 +15,9 @@ secrets.json
 
 appsettings.json
 
+# Your specific secrets
+firebase-service-account.json
+
 
 
 # EF Core Migrations (optional, if you regenerate them)
