@@ -1,6 +1,6 @@
 ﻿namespace automobile_backend.Models.DTOs
 {
-    public class CustomerVehicleDto
+    public class CreateVehicleDto
     {
         public string RegistrationNumber { get; set; } = string.Empty;
         public string FuelType { get; set; } = string.Empty; // Enum as string
