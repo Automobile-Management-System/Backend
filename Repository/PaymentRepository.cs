@@ -43,5 +43,14 @@ namespace automobile_backend.Repository
                 .OrderByDescending(p => p.Appointment.DateTime)
                 .ToListAsync();
         }
+
+        public async Task<Payment?> GetPaymentForInvoiceAsync(int paymentId)
+        {
+            // Eagerly load the data needed by your InvoiceDocument template
+            return await _context.Payments
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.User)
+                .FirstOrDefaultAsync(p => p.PaymentId == paymentId);
+        }
     }
 }

@@ -71,24 +71,30 @@ namespace automobile_backend.Repositories
             return (paymentDetails, totalCount);
         }
 
-        public async Task<bool> UpdatePaymentStatusAsync(int paymentId, PaymentStatus newStatus)
+        public async Task<bool> UpdatePaymentStatusAsync(int paymentId, PaymentStatus newStatus, string? invoiceUrl = null)
         {
-
             var payment = await _context.Payments.FindAsync(paymentId);
 
             if (payment == null)
             {
-
                 return false;
             }
 
             payment.Status = newStatus;
-            await _context.SaveChangesAsync();
 
+            // --- ADD THIS LOGIC ---
+            // If an invoice URL was generated and passed, save it.
+            if (!string.IsNullOrEmpty(invoiceUrl))
+            {
+                payment.InvoiceLink = invoiceUrl;
+            }
+            // --- END ADDED LOGIC ---
+
+            await _context.SaveChangesAsync();
             return true;
         }
 
-        
+
         public async Task<decimal> GetTotalRevenueAsync()
         {
             // Only sums payments that are marked as 'Completed'

@@ -7,10 +7,11 @@ namespace automobile_backend.Repositories
     {
         Task<(IEnumerable<AdminPaymentDetailDto> Items, int TotalCount)> GetAllPaymentsWithCustomerDetailsAsync(int pageNumber, int pageSize);
 
-        Task<bool> UpdatePaymentStatusAsync(int paymentId, PaymentStatus newStatus);
+        Task<bool> UpdatePaymentStatusAsync(int paymentId, PaymentStatus newStatus, string? invoiceUrl = null);
 
         Task<decimal> GetTotalRevenueAsync();
         Task<int> GetPaymentCountByStatusAsync(PaymentStatus status);
 
+        
     }
 }
