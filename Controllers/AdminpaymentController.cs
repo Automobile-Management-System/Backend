@@ -1,6 +1,7 @@
 ﻿using automobile_backend.Models.DTOs;
 using automobile_backend.Services;
 using Microsoft.AspNetCore.Mvc;
+using automobile_backend.Models.Entities;
 
 
 namespace automobile_backend.Controllers
@@ -22,25 +23,31 @@ namespace automobile_backend.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<AdminPaymentDetailDto>), 200)]
         [ProducesResponseType(500)]
-        // MODIFIED: Accepts pageNumber from query string, defaults to 1
-        public async Task<ActionResult<IEnumerable<AdminPaymentDetailDto>>> GetAllPayments([FromQuery] int pageNumber = 1)
+        public async Task<ActionResult<IEnumerable<AdminPaymentDetailDto>>> GetAllPayments(
+                    [FromQuery] int pageNumber = 1,
+                    [FromQuery] string? search = null,
+                    [FromQuery] PaymentStatus? status = null,
+                    [FromQuery] PaymentMethod? paymentMethod = null)
         {
             try
             {
-                // Call the service with pagination
-                var (payments, totalCount) = await _paymentService.GetAllPaymentsAsync(pageNumber, DefaultPageSize);
+                // --- UPDATED SERVICE CALL ---
+                // Pass all parameters to the service
+                var (payments, totalCount) = await _paymentService.GetAllPaymentsAsync(
+                    pageNumber,
+                    DefaultPageSize,
+                    search,
+                    status,
+                    paymentMethod
+                );
 
-                // Add the total count to the response header
                 Response.Headers["X-Total-Count"] = totalCount.ToString();
-
-                // IMPORTANT: Expose the header so the frontend can read it (CORS)
                 Response.Headers["Access-Control-Expose-Headers"] = "X-Total-Count";
 
                 return Ok(payments);
             }
             catch (Exception ex)
             {
-                // Log the exception (using a proper logging framework)
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
