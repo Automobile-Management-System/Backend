@@ -78,7 +78,9 @@ builder.Services.AddScoped<IInvoiceService, automobile_backend.Services.InvoiceS
 // Register Notification & Alerts
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
-
+// Register Customer Vehicle Management
+builder.Services.AddScoped<ICustomerVehicleRepository, CustomerVehicleRepository>();
+builder.Services.AddScoped<ICustomerVehicleService, CustomerVehicleService>();
 
 // Register AI Chatbot Service
 builder.Services.AddHttpClient<IChatbotService, ChatbotService>();
