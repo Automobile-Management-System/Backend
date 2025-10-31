@@ -9,5 +9,8 @@ namespace automobile_backend.Repositories
 
         Task<bool> UpdatePaymentStatusAsync(int paymentId, PaymentStatus newStatus);
 
+        Task<decimal> GetTotalRevenueAsync();
+        Task<int> GetPaymentCountByStatusAsync(PaymentStatus status);
+
     }
 }

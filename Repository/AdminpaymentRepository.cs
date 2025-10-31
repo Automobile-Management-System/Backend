@@ -87,5 +87,21 @@ namespace automobile_backend.Repositories
 
             return true;
         }
+
+        
+        public async Task<decimal> GetTotalRevenueAsync()
+        {
+            // Only sums payments that are marked as 'Completed'
+            return await _context.Payments
+                .Where(p => p.Status == PaymentStatus.Completed)
+                .SumAsync(p => p.Amount);
+        }
+
+       
+        public async Task<int> GetPaymentCountByStatusAsync(PaymentStatus status)
+        {
+            return await _context.Payments
+                .CountAsync(p => p.Status == status);
+        }
     }
 }

@@ -77,5 +77,73 @@ namespace automobile_backend.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        // --- NEW ENDPOINT: Get Pending Count ---
+        [HttpGet("revenue")]
+        [ProducesResponseType(typeof(object), 200)] // Returns { "totalRevenue": 123.45 }
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetTotalRevenue()
+        {
+            try
+            {
+                var revenue = await _paymentService.GetTotalRevenueAsync();
+                return Ok(new { TotalRevenue = revenue });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // --- NEW ENDPOINT: Get Pending Count ---
+        [HttpGet("count/pending")]
+        [ProducesResponseType(typeof(object), 200)] // Returns { "count": 5 }
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetPendingCount()
+        {
+            try
+            {
+                var count = await _paymentService.GetPendingCountAsync();
+                return Ok(new { Count = count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // --- NEW ENDPOINT: Get Completed Count ---
+        [HttpGet("count/completed")]
+        [ProducesResponseType(typeof(object), 200)] // Returns { "count": 10 }
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetCompletedCount()
+        {
+            try
+            {
+                var count = await _paymentService.GetCompletedCountAsync();
+                return Ok(new { Count = count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // --- NEW ENDPOINT: Get Failed Count ---
+        [HttpGet("count/failed")]
+        [ProducesResponseType(typeof(object), 200)] // Returns { "count": 2 }
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetFailedCount()
+        {
+            try
+            {
+                var count = await _paymentService.GetFailedCountAsync();
+                return Ok(new { Count = count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 }

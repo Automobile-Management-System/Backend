@@ -24,5 +24,26 @@ namespace automobile_backend.Services
             return await _repository.UpdatePaymentStatusAsync(paymentId, newStatus);
         }
 
+        public async Task<decimal> GetTotalRevenueAsync()
+        {
+            // Business logic: Revenue is defined as the sum of *Completed* payments.
+            return await _repository.GetTotalRevenueAsync();
+        }
+
+        public async Task<int> GetPendingCountAsync()
+        {
+            return await _repository.GetPaymentCountByStatusAsync(PaymentStatus.Pending);
+        }
+
+        public async Task<int> GetCompletedCountAsync()
+        {
+            return await _repository.GetPaymentCountByStatusAsync(PaymentStatus.Completed);
+        }
+
+        public async Task<int> GetFailedCountAsync()
+        {
+            return await _repository.GetPaymentCountByStatusAsync(PaymentStatus.Failed);
+        }
+
     }
 }
