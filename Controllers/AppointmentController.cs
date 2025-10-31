@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System;
 
 namespace automobile_backend.Controllers
 {
@@ -24,8 +25,7 @@ namespace automobile_backend.Controllers
         public async Task<IActionResult> GetAll()
         {
             var appointments = await _appointmentService.GetAllAppointmentsAsync();
-            
-            // Map to DTOs to avoid circular references
+
             var appointmentDtos = appointments.Select(a => new AppointmentResponseDto
             {
                 AppointmentId = a.AppointmentId,
@@ -33,24 +33,31 @@ namespace automobile_backend.Controllers
                 Status = a.Status,
                 UserId = a.UserId,
                 UserName = a.User != null ? $"{a.User.FirstName} {a.User.LastName}" : "Unknown",
-                Services = a.AppointmentServices?.Select(aps => new ServiceDto
+                Services = a.AppointmentServices?.Select(aps => new automobile_backend.Models.DTOs.ServiceDto
                 {
-                    ServiceId = aps.Service.ServiceId,
                     ServiceName = aps.Service.ServiceName,
                     BasePrice = aps.Service.BasePrice
-                }).ToList() ?? new List<ServiceDto>()
+                }).ToList() ?? new List<automobile_backend.Models.DTOs.ServiceDto>()
             }).ToList();
-            
+
             return Ok(appointmentDtos);
+        }
+
+        [HttpGet("availability")]
+        public async Task<IActionResult> GetAvailability([FromQuery] DateTime date)
+        {
+            // Expecting date as yyyy-MM-dd; if not provided, use today's date
+            var day = date == default ? DateTime.UtcNow.Date : date.Date;
+            var availability = await _appointmentService.GetSlotAvailabilityAsync(day);
+            return Ok(availability);
         }
 
         [HttpGet("my-appointments")]
         [Authorize]
         public async Task<IActionResult> GetMyAppointments()
         {
-            // Get user ID from JWT claims
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("userId");
-            
+
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
             {
                 return Unauthorized(new { message = "User ID not found in token." });
@@ -59,8 +66,7 @@ namespace automobile_backend.Controllers
             var appointments = (await _appointmentService.GetAllAppointmentsAsync())
                 .Where(a => a.UserId == userId)
                 .ToList();
-            
-            // Map to DTOs
+
             var appointmentDtos = appointments.Select(a => new AppointmentResponseDto
             {
                 AppointmentId = a.AppointmentId,
@@ -68,48 +74,48 @@ namespace automobile_backend.Controllers
                 Status = a.Status,
                 UserId = a.UserId,
                 UserName = a.User != null ? $"{a.User.FirstName} {a.User.LastName}" : "Unknown",
-                Services = a.AppointmentServices?.Select(aps => new ServiceDto
+                Services = a.AppointmentServices?.Select(aps => new automobile_backend.Models.DTOs.ServiceDto
                 {
-                    ServiceId = aps.Service.ServiceId,
                     ServiceName = aps.Service.ServiceName,
                     BasePrice = aps.Service.BasePrice
-                }).ToList() ?? new List<ServiceDto>()
+                }).ToList() ?? new List<automobile_backend.Models.DTOs.ServiceDto>()
             }).ToList();
-            
+
             return Ok(appointmentDtos);
         }
 
+        // Removed: The my-vehicles endpoint as it is no longer needed
+
         [HttpPost("create")]
-        [Authorize] // optional: enable if using authentication
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateServiceAppointmentDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // In a real app, you'd get user ID from the JWT claims
-            // e.g. int userId = int.Parse(User.FindFirst("userId")!.Value);
-            // For now, assume test user id = 1
-            int userId = 1;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("userId");
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { message = "User ID not found in token." });
+            }
 
             try
             {
                 var appointment = await _appointmentService.CreateAppointmentAsync(userId, dto);
-                
-                // Return DTO instead of entity
+
                 var appointmentDto = new AppointmentResponseDto
                 {
                     AppointmentId = appointment.AppointmentId,
                     DateTime = appointment.DateTime,
                     Status = appointment.Status,
                     UserId = appointment.UserId,
-                    Services = appointment.AppointmentServices?.Select(aps => new ServiceDto
+                    Services = appointment.AppointmentServices?.Select(aps => new automobile_backend.Models.DTOs.ServiceDto
                     {
-                        ServiceId = aps.ServiceId,
                         ServiceName = aps.Service?.ServiceName ?? "Unknown",
                         BasePrice = aps.Service?.BasePrice ?? 0
-                    }).ToList() ?? new List<ServiceDto>()
+                    }).ToList() ?? new List<automobile_backend.Models.DTOs.ServiceDto>()
                 };
-                
+
                 return Ok(appointmentDto);
             }
             catch (Exception ex)

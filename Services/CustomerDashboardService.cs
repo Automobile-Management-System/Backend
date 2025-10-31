@@ -39,6 +39,7 @@ namespace automobile_backend.Services
 
             return vehicles.Select(v => new CustomerVehicleDto
             {
+                VehicleId = v.VehicleId, // include ID for booking
                 RegistrationNumber = v.RegistrationNumber,
                 FuelType = v.FuelType.ToString(),
                 ChassisNumber = v.ChassisNumber,
