@@ -64,6 +64,9 @@ builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IServiceAnalyticsRepository, ServiceAnalyticsRepository>();
 builder.Services.AddScoped<IServiceAnalyticsService, ServiceAnalyticsService>();
 
+builder.Services.AddScoped<IEmployeeDashboardRepository, EmployeeDashboardRepository>();
+builder.Services.AddScoped<IEmployeeDashboardService, EmployeeDashboardService>();
+
 builder.Services.AddScoped<IProfileManagementRepository, ProfileManagementRepository>();
 builder.Services.AddScoped<IProfileManagementService, ProfileManagementService>();
 
