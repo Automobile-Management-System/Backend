@@ -40,8 +40,9 @@ namespace automobile_backend.Services
         {
             var day = date.Date;
 
+            // Count only appointments that actually occupy capacity (exclude rejected)
             var bookings = await _context.Appointments
-                .Where(a => a.DateTime.Date == day)
+                .Where(a => a.DateTime.Date == day && a.Status != AppointmentStatus.Rejected)
                 .GroupBy(a => a.SlotsTime)
                 .Select(g => new { Slot = g.Key, Count = g.Count() })
                 .ToListAsync();
@@ -52,7 +53,8 @@ namespace automobile_backend.Services
                 .Select(slot => new SlotAvailabilityDto
                 {
                     Slot = slot,
-                    Booked = bookedLookup.TryGetValue(slot, out var count) ? count : 0
+                    Booked = bookedLookup.TryGetValue(slot, out var count) ? count : 0,
+                    Capacity = SlotCapacity // ensure API consumers see the true capacity
                 })
                 .ToList();
 
@@ -99,8 +101,9 @@ namespace automobile_backend.Services
 
             await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
 
+            // Enforce capacity at booking time (exclude rejected)
             var currentCount = await _context.Appointments
-                .Where(a => a.DateTime.Date == day && a.SlotsTime == dto.SlotsTime)
+                .Where(a => a.DateTime.Date == day && a.SlotsTime == dto.SlotsTime && a.Status != AppointmentStatus.Rejected)
                 .CountAsync();
 
             if (currentCount >= SlotCapacity)
