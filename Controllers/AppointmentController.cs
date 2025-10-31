@@ -106,7 +106,7 @@ namespace automobile_backend.Controllers
                 var appointmentDto = new AppointmentResponseDto
                 {
                     AppointmentId = appointment.AppointmentId,
-                    DateTime = appointment.DateTime,
+                    DateTime = appointment.StartDateTime, // Changed from appointment.DateTime
                     Status = appointment.Status,
                     UserId = appointment.UserId,
                     Services = appointment.AppointmentServices?.Select(aps => new automobile_backend.Models.DTOs.ServiceDto

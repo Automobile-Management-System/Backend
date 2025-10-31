@@ -1,4 +1,4 @@
-using automobile_backend.InterFaces.IRepository;
+﻿using automobile_backend.InterFaces.IRepository;
 using automobile_backend.InterFaces.IServices;
 using automobile_backend.Models.DTOs;
 using automobile_backend.Models.Entities;
@@ -99,8 +99,6 @@ namespace automobile_backend.Services
 
             var (start, end) = GetSlotRange(day, dto.SlotsTime);
 
-            await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
-
             // Enforce capacity at booking time (exclude rejected)
             var currentCount = await _context.Appointments
                 .Where(a => a.DateTime.Date == day && a.SlotsTime == dto.SlotsTime && a.Status != AppointmentStatus.Rejected)
@@ -113,7 +111,7 @@ namespace automobile_backend.Services
             {
                 UserId = userId,
                 VehicleId = dto.VehicleId,
-                DateTime = day,
+                DateTime = start, // ✅ Use start instead of day
                 SlotsTime = dto.SlotsTime,
                 StartDateTime = start,
                 EndDateTime = end,
@@ -131,7 +129,6 @@ namespace automobile_backend.Services
             }
 
             var saved = await _appointmentRepository.AddAsync(appointment);
-            await tx.CommitAsync();
             return saved;
         }
 
