@@ -7,5 +7,6 @@ namespace automobile_backend.InterFaces.IRepository
     public interface IAppointmentRepository
     {
         Task<IEnumerable<Appointment>> GetAllAsync();
+        Task<Appointment> AddAsync(Appointment appointment);
     }
 }
