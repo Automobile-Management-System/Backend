@@ -33,6 +33,8 @@ namespace automobile_backend.Controllers
                 Status = a.Status,
                 UserId = a.UserId,
                 UserName = a.User != null ? $"{a.User.FirstName} {a.User.LastName}" : "Unknown",
+                VehicleId = a.VehicleId,
+                RegistrationNumber = a.CustomerVehicle?.RegistrationNumber ?? string.Empty,
                 Services = a.AppointmentServices?.Select(aps => new automobile_backend.Models.DTOs.ServiceDto
                 {
                     ServiceName = aps.Service.ServiceName,
@@ -74,6 +76,8 @@ namespace automobile_backend.Controllers
                 Status = a.Status,
                 UserId = a.UserId,
                 UserName = a.User != null ? $"{a.User.FirstName} {a.User.LastName}" : "Unknown",
+                VehicleId = a.VehicleId,
+                RegistrationNumber = a.CustomerVehicle?.RegistrationNumber ?? string.Empty,
                 Services = a.AppointmentServices?.Select(aps => new automobile_backend.Models.DTOs.ServiceDto
                 {
                     ServiceName = aps.Service.ServiceName,
@@ -83,8 +87,6 @@ namespace automobile_backend.Controllers
 
             return Ok(appointmentDtos);
         }
-
-        // Removed: The my-vehicles endpoint as it is no longer needed
 
         [HttpPost("create")]
         [Authorize]
@@ -109,6 +111,8 @@ namespace automobile_backend.Controllers
                     DateTime = appointment.StartDateTime, // Changed from appointment.DateTime
                     Status = appointment.Status,
                     UserId = appointment.UserId,
+                    VehicleId = appointment.VehicleId,
+                    RegistrationNumber = appointment.CustomerVehicle?.RegistrationNumber ?? string.Empty,
                     Services = appointment.AppointmentServices?.Select(aps => new automobile_backend.Models.DTOs.ServiceDto
                     {
                         ServiceName = aps.Service?.ServiceName ?? "Unknown",

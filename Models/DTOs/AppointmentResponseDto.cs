@@ -9,6 +9,10 @@ namespace automobile_backend.Models.DTOs
         public AppointmentStatus Status { get; set; }
         public int UserId { get; set; }
         public string UserName { get; set; }
+
+        public int VehicleId { get; set; }
+        public string RegistrationNumber { get; set; } = string.Empty;
+
         public List<ServiceDto> Services { get; set; } = new();
     }
 
