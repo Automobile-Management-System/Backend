@@ -17,7 +17,7 @@ namespace automobile_backend.Services
             _repository = repository;
         }
 
-        public async Task AddVehicleAsync(int userId, CreateVehicle dto)
+        public async Task AddVehicleAsync(int userId, CreateVehicleDto dto)
         {
             var vehicle = new CustomerVehicle
             {
@@ -33,11 +33,11 @@ namespace automobile_backend.Services
             await _repository.AddVehicleAsync(vehicle);
         }
 
-        public async Task<List<CreateVehicle>> GetVehiclesByUserIdAsync(int userId)
+        public async Task<List<CreateVehicleDto>> GetVehiclesByUserIdAsync(int userId)
         {
             var vehicles = await _repository.GetVehiclesByUserIdAsync(userId);
 
-            return vehicles.Select(v => new CreateVehicle
+            return vehicles.Select(v => new CreateVehicleDto
             {
                 VehicleId = v.VehicleId, // include ID for booking
                 RegistrationNumber = v.RegistrationNumber,

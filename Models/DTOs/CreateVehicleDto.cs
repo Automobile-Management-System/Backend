@@ -1,6 +1,6 @@
 ﻿namespace automobile_backend.Models.DTOs
 {
-    public class CustomerVehicleDto
+    public class CreateVehicleDto
     {
         public int VehicleId { get; set; }
         public string RegistrationNumber { get; set; } = string.Empty;
