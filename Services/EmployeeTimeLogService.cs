@@ -13,11 +13,17 @@ namespace automobile_backend.Services
             _repository = repository;
         }
 
-        public async Task<List<EmployeeTimeLogDTO>> GetEmployeeTimeLogsAsync(int userId)
+        public async Task<PaginatedResponse<EmployeeTimeLogDTO>> GetEmployeeTimeLogsAsync(
+            int userId,
+            int pageNumber,
+            int pageSize,
+            string? search,
+            DateTime? startDate,
+            DateTime? endDate)
         {
-            var logs = await _repository.GetEmployeeTimeLogsAsync(userId);
+            var (logs, totalCount) = await _repository.GetEmployeeTimeLogsAsync(userId, pageNumber, pageSize, search, startDate, endDate);
 
-            return logs.Select(t => new EmployeeTimeLogDTO
+            var result = logs.Select(t => new EmployeeTimeLogDTO
             {
                 LogId = t.LogId,
                 StartDateTime = t.StartDateTime,
@@ -33,6 +39,14 @@ namespace automobile_backend.Services
                     .Select(m => m.Title)
                     .ToList()
             }).ToList();
+
+            return new PaginatedResponse<EmployeeTimeLogDTO>
+            {
+                Data = result,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
     }
 }

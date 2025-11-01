@@ -4,6 +4,12 @@ namespace automobile_backend.InterFaces.IServices
 {
     public interface IEmployeeTimeLogService
     {
-        Task<List<EmployeeTimeLogDTO>> GetEmployeeTimeLogsAsync(int userId);
+        Task<PaginatedResponse<EmployeeTimeLogDTO>> GetEmployeeTimeLogsAsync(
+            int userId,
+            int pageNumber,
+            int pageSize,
+            string? search,
+            DateTime? startDate,
+            DateTime? endDate);
     }
 }

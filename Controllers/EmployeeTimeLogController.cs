@@ -7,7 +7,7 @@ namespace automobile_backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Only logged-in employees
+    [Authorize]
     public class EmployeeTimeLogController : ControllerBase
     {
         private readonly IEmployeeTimeLogService _timeLogService;
@@ -18,24 +18,35 @@ namespace automobile_backend.Controllers
         }
 
         [HttpGet("my-logs")]
-        public async Task<IActionResult> GetMyTimeLogs()
+        public async Task<IActionResult> GetMyTimeLogs(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
         {
             try
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userIdClaim))
-                {
                     return Unauthorized(new { message = "User not authenticated" });
-                }
 
                 int userId = int.Parse(userIdClaim);
-                var logs = await _timeLogService.GetEmployeeTimeLogsAsync(userId);
+                var response = await _timeLogService.GetEmployeeTimeLogsAsync(userId, pageNumber, pageSize, search, startDate, endDate);
 
                 return Ok(new
                 {
                     success = true,
-                    count = logs.Count,
-                    data = logs
+                    pagination = new
+                    {
+                        response.TotalCount,
+                        response.PageNumber,
+                        response.PageSize,
+                        response.TotalPages,
+                        response.HasNextPage,
+                        response.HasPreviousPage
+                    },
+                    data = response.Data
                 });
             }
             catch (Exception ex)
