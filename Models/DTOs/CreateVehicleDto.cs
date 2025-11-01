@@ -2,7 +2,6 @@
 {
     public class CreateVehicleDto
     {
-        public string VehicleId { get; set; } = string.Empty;
         public string RegistrationNumber { get; set; } = string.Empty;
         public string FuelType { get; set; } = string.Empty; // Enum as string
         public string ChassisNumber { get; set; } = string.Empty;
