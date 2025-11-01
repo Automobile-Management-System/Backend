@@ -19,5 +19,10 @@ namespace automobile_backend.Services
         {
             return await _appointmentRepository.GetAllAsync();
         }
+
+        public Task UpdateAppointmentStatusAsync(string id, string status)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
