@@ -15,9 +15,6 @@ namespace automobile_backend.Models.Entities
         [Required]
         public string Description { get; set; } = string.Empty;
 
-        // Use the enum declared in your Enums.cs
-        public ModificationStatus Status { get; set; } = ModificationStatus.Pending;
-
         // Foreign key to Appointment (optional)
         public int AppointmentId { get; set; }
 
