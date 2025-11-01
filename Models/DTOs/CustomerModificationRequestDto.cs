@@ -35,8 +35,8 @@ namespace automobile_backend.Models.DTOs
             }
         }
 
-        public string RequestStatus { get; set; } = "Pending";
-        public int AppointmentId { get; set; } = 0; // Optional, can be set later
-        public int UserId { get; set; } // Filled automatically from claims
+        public string RequestStatus { get; set; } = "Pending"; // from Appointment.Status
+        public int AppointmentId { get; set; } = 0;
+        public int UserId { get; set; } // filled automatically from claims
     }
 }

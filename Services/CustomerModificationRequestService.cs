@@ -41,7 +41,9 @@ namespace automobile_backend.Services
             {
                 UserId = dto.UserId,
                 VehicleId = dto.VehicleId,
-                Type = Models.Entities.Type.Modifications
+                Type = Models.Entities.Type.Modifications,        // Fully qualified enum
+                Status = Models.Entities.AppointmentStatus.Pending, // Fully qualified enum
+                DateTime = DateTime.UtcNow                           // Default appointment time
             };
 
             _context.Appointments.Add(appointment);
@@ -52,8 +54,7 @@ namespace automobile_backend.Services
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                AppointmentId = appointment.AppointmentId,
-                Status = ModificationStatus.Pending
+                AppointmentId = appointment.AppointmentId
             };
 
             await _requestRepository.AddAsync(request);
@@ -67,8 +68,8 @@ namespace automobile_backend.Services
                 Title = request.Title,
                 Description = request.Description,
                 VehicleId = request.Appointment?.VehicleId ?? 0,
-                CreatedDate = DateTime.UtcNow, // DTO will format automatically
-                RequestStatus = request.Status.ToString(),
+                CreatedDate = DateTime.UtcNow, // DTO formatting will handle this
+                RequestStatus = request.Appointment?.Status.ToString() ?? "Pending", // AppointmentStatus
                 AppointmentId = request.AppointmentId,
                 UserId = request.Appointment?.UserId ?? 0
             };

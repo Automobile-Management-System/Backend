@@ -19,32 +19,48 @@ namespace automobile_backend.Controllers
             _service = service;
         }
 
+        // GET: api/customer-modification-requests
         [HttpGet]
         public async Task<IActionResult> GetForLoggedInUser()
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                return Unauthorized();
+            try
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                    return Unauthorized();
 
-            var requests = await _service.GetByUserIdAsync(userId);
-            return Ok(requests);
+                var requests = await _service.GetByUserIdAsync(userId);
+                return Ok(requests);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error fetching modification requests", error = ex.Message });
+            }
         }
 
+        // POST: api/customer-modification-requests
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CustomerModificationRequestDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                return Unauthorized();
+            try
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                    return Unauthorized();
 
-            dto.UserId = userId; // Assign logged-in user automatically
+                dto.UserId = userId; // Assign logged-in user automatically
 
-            await _service.AddModificationRequestAsync(dto);
+                await _service.AddModificationRequestAsync(dto);
 
-            return Ok(new { message = "Modification request created successfully!" });
+                return Ok(new { message = "Modification request created successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error creating modification request", error = ex.Message });
+            }
         }
     }
 }
