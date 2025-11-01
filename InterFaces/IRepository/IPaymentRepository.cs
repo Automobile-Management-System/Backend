@@ -16,5 +16,7 @@ namespace automobile_backend.InterFaces.IRepository
 
         // NEW - Gets all payments (with Appointment details) for a specific user ID
         Task<IEnumerable<Payment>> GetPaymentsForUserAsync(int userId);
+
+        Task<Payment?> GetPaymentForInvoiceAsync(int paymentId);
     }
 }

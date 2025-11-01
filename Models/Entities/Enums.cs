@@ -52,10 +52,8 @@
     {
         EightAm,
         TenAm,
-        TwelvePm,
         OnePm,
         ThreePm,
-        FivePm
     }
 
     public enum Type

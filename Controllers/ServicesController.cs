@@ -12,6 +12,18 @@ namespace automobile_backend.Controllers
         public decimal BasePrice { get; set; }
     }
 
+    // Pagination response DTO
+    public class PagedResult<T>
+    {
+        public List<T> Items { get; set; } = new List<T>();
+        public int TotalCount { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages { get; set; }
+        public bool HasPreviousPage { get; set; }
+        public bool HasNextPage { get; set; }
+    }
+
     [Route("api/[controller]")]
     [ApiController]
     public class ServicesController : ControllerBase
@@ -23,11 +35,37 @@ namespace automobile_backend.Controllers
             _context = context;
         }
 
-        // GET: api/Services
+        // GET: api/Services?pageNumber=1&pageSize=10
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Service>>> GetServices()
+        public async Task<ActionResult<PagedResult<Service>>> GetServices(
+            [FromQuery] int pageNumber = 1, 
+            [FromQuery] int pageSize = 10)
         {
-            return await _context.Services.ToListAsync();
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 100) pageSize = 100; // Max limit
+
+            var totalCount = await _context.Services.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            var services = await _context.Services
+                .OrderBy(s => s.ServiceName)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new PagedResult<Service>
+            {
+                Items = services,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages,
+                HasPreviousPage = pageNumber > 1,
+                HasNextPage = pageNumber < totalPages
+            };
+
+            return result;
         }
 
         // GET: api/Services/5

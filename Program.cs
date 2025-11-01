@@ -64,6 +64,12 @@ builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IServiceAnalyticsRepository, ServiceAnalyticsRepository>();
 builder.Services.AddScoped<IServiceAnalyticsService, ServiceAnalyticsService>();
 
+builder.Services.AddScoped<IEmployeeDashboardRepository, EmployeeDashboardRepository>();
+builder.Services.AddScoped<IEmployeeDashboardService, EmployeeDashboardService>();
+
+builder.Services.AddScoped<IProfileManagementRepository, ProfileManagementRepository>();
+builder.Services.AddScoped<IProfileManagementService, ProfileManagementService>();
+
 // Register Admin Dashboard
 builder.Services.AddScoped<IAdminDashboardRepository, AdminDashboardRepository>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
@@ -78,7 +84,9 @@ builder.Services.AddScoped<IInvoiceService, automobile_backend.Services.InvoiceS
 // Register Notification & Alerts
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
-
+// Register Customer Vehicle Management
+builder.Services.AddScoped<ICustomerVehicleRepository, CustomerVehicleRepository>();
+builder.Services.AddScoped<ICustomerVehicleService, CustomerVehicleService>();
 
 // Register AI Chatbot Service
 builder.Services.AddHttpClient<IChatbotService, ChatbotService>();
@@ -91,8 +99,14 @@ builder.Services.AddScoped<IServiceProgressService, ServiceProgressService>();
 builder.Services.AddScoped<IViewServiceRepository, ViewServiceRepository>();
 builder.Services.AddScoped<IViewServiceService, ViewServiceService>();
 
+builder.Services.AddScoped<IAdminpaymentService, AdminpaymentService>();
+builder.Services.AddScoped<IAdminpaymentRepository, AdminpaymentRepository>();
+
 builder.Services.AddScoped<ICloudStorageService, CloudStorageService>();
 
+//added
+builder.Services.AddScoped<IServiceAppointmentRepository, ServiceAppointmentRepository>();
+builder.Services.AddScoped<IServiceAppointmentService, ServiceAppointmentService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -107,7 +121,11 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 // Configure Swagger to use JWT
