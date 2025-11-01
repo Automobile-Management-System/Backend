@@ -15,12 +15,10 @@ namespace automobile_backend.Models.Entities
         [Required]
         public string Description { get; set; } = string.Empty;
 
-
-        // Foreign Key for Appointment
+        // Foreign key to Appointment (optional)
         public int AppointmentId { get; set; }
 
-        // Navigation property to the Appointment
         [ForeignKey("AppointmentId")]
-        public Appointment Appointment { get; set; }
+        public Appointment? Appointment { get; set; }
     }
 }
