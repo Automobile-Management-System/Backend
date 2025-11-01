@@ -36,6 +36,61 @@ namespace automobile_backend.Services
             return await _appointmentRepository.GetAllAsync();
         }
 
+        public async Task<PaginatedResult<Appointment>> GetAllAppointmentsPaginatedAsync(PaginationParameters parameters)
+        {
+            var query = _context.Appointments
+                .Include(a => a.User)
+                .Include(a => a.CustomerVehicle)
+                .Include(a => a.AppointmentServices)
+                    .ThenInclude(aps => aps.Service)
+                .OrderByDescending(a => a.DateTime);
+
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)parameters.PageSize);
+
+            var appointments = await query
+                .Skip((parameters.Page - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            return new PaginatedResult<Appointment>
+            {
+                Data = appointments,
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                CurrentPage = parameters.Page,
+                PageSize = parameters.PageSize
+            };
+        }
+
+        public async Task<PaginatedResult<Appointment>> GetUserAppointmentsPaginatedAsync(int userId, PaginationParameters parameters)
+        {
+            var query = _context.Appointments
+                .Where(a => a.UserId == userId)
+                .Include(a => a.User)
+                .Include(a => a.CustomerVehicle)
+                .Include(a => a.AppointmentServices)
+                    .ThenInclude(aps => aps.Service)
+                .OrderByDescending(a => a.DateTime);
+
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)parameters.PageSize);
+
+            var appointments = await query
+                .Skip((parameters.Page - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            return new PaginatedResult<Appointment>
+            {
+                Data = appointments,
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                CurrentPage = parameters.Page,
+                PageSize = parameters.PageSize
+            };
+        }
+
         public async Task<IEnumerable<SlotAvailabilityDto>> GetSlotAvailabilityAsync(DateTime date)
         {
             var day = date.Date;

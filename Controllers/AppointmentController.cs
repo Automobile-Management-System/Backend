@@ -45,6 +45,39 @@ namespace automobile_backend.Controllers
             return Ok(appointmentDtos);
         }
 
+        [HttpGet("paginated")]
+        public async Task<IActionResult> GetAllPaginated([FromQuery] PaginationParameters parameters)
+        {
+            var paginatedAppointments = await _appointmentService.GetAllAppointmentsPaginatedAsync(parameters);
+
+            var appointmentDtos = paginatedAppointments.Data.Select(a => new AppointmentResponseDto
+            {
+                AppointmentId = a.AppointmentId,
+                DateTime = a.DateTime,
+                Status = a.Status,
+                UserId = a.UserId,
+                UserName = a.User != null ? $"{a.User.FirstName} {a.User.LastName}" : "Unknown",
+                VehicleId = a.VehicleId,
+                RegistrationNumber = a.CustomerVehicle?.RegistrationNumber ?? string.Empty,
+                Services = a.AppointmentServices?.Select(aps => new automobile_backend.Models.DTOs.ServiceDto
+                {
+                    ServiceName = aps.Service?.ServiceName ?? "Unknown",
+                    BasePrice = aps.Service?.BasePrice ?? 0
+                }).ToList() ?? new List<automobile_backend.Models.DTOs.ServiceDto>()
+            }).ToList();
+
+            var result = new PaginatedResult<AppointmentResponseDto>
+            {
+                Data = appointmentDtos,
+                TotalItems = paginatedAppointments.TotalItems,
+                TotalPages = paginatedAppointments.TotalPages,
+                CurrentPage = paginatedAppointments.CurrentPage,
+                PageSize = paginatedAppointments.PageSize
+            };
+
+            return Ok(result);
+        }
+
         [HttpGet("availability")]
         public async Task<IActionResult> GetAvailability([FromQuery] DateTime date)
         {
@@ -86,6 +119,47 @@ namespace automobile_backend.Controllers
             }).ToList();
 
             return Ok(appointmentDtos);
+        }
+
+        [HttpGet("my-appointments/paginated")]
+        [Authorize]
+        public async Task<IActionResult> GetMyAppointmentsPaginated([FromQuery] PaginationParameters parameters)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("userId");
+
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { message = "User ID not found in token." });
+            }
+
+            var paginatedAppointments = await _appointmentService.GetUserAppointmentsPaginatedAsync(userId, parameters);
+
+            var appointmentDtos = paginatedAppointments.Data.Select(a => new AppointmentResponseDto
+            {
+                AppointmentId = a.AppointmentId,
+                DateTime = a.DateTime,
+                Status = a.Status,
+                UserId = a.UserId,
+                UserName = a.User != null ? $"{a.User.FirstName} {a.User.LastName}" : "Unknown",
+                VehicleId = a.VehicleId,
+                RegistrationNumber = a.CustomerVehicle?.RegistrationNumber ?? string.Empty,
+                Services = a.AppointmentServices?.Select(aps => new automobile_backend.Models.DTOs.ServiceDto
+                {
+                    ServiceName = aps.Service?.ServiceName ?? "Unknown",
+                    BasePrice = aps.Service?.BasePrice ?? 0
+                }).ToList() ?? new List<automobile_backend.Models.DTOs.ServiceDto>()
+            }).ToList();
+
+            var result = new PaginatedResult<AppointmentResponseDto>
+            {
+                Data = appointmentDtos,
+                TotalItems = paginatedAppointments.TotalItems,
+                TotalPages = paginatedAppointments.TotalPages,
+                CurrentPage = paginatedAppointments.CurrentPage,
+                PageSize = paginatedAppointments.PageSize
+            };
+
+            return Ok(result);
         }
 
         [HttpPost("create")]
