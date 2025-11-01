@@ -26,18 +26,34 @@ namespace automobile_backend.Services
             return user == null ? null : MapToDetailDto(user);
         }
 
-        public async Task<IEnumerable<UserSummaryDto>> GetAllUsersAsync()
+        // Search + Filter + Pagination
+        public async Task<PagedResult<UserSummaryDto>> GetUsersAsync(string? search, string? role, int pageNumber, int pageSize)
         {
-            var users = await _repo.GetAllUsersAsync();
-            return users.Select(u => new UserSummaryDto
+            Enums? parsedRole = null;
+
+            if (!string.IsNullOrEmpty(role) && Enum.TryParse<Enums>(role, true, out var parsed))
             {
-                UserId = u.UserId,
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                Email = u.Email,
-                PhoneNumber = u.PhoneNumber,
-                Status = u.Status
-            });
+                parsedRole = parsed;
+            }
+
+            var result = await _repo.GetUsersAsync(search, parsedRole, pageNumber, pageSize);
+
+            return new PagedResult<UserSummaryDto>
+            {
+                Items = result.Items.Select(u => new UserSummaryDto
+                {
+                    UserId = u.UserId,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    PhoneNumber = u.PhoneNumber,
+                    Role = u.Role.ToString(),
+                    Status = u.Status
+                }),
+                TotalCount = result.TotalCount,
+                PageNumber = result.PageNumber,
+                PageSize = result.PageSize
+            };
         }
 
         public async Task<UserDetailDto?> UpdateUserAsync(int id, UserUpdateDto dto)
@@ -63,6 +79,25 @@ namespace automobile_backend.Services
                 Status = user.Status,
                 Role = user.Role.ToString()
             };
+        }
+        public async Task<int> GetTotalUsersCountAsync()
+        {
+            return await _repo.GetTotalUsersCountAsync();
+        }
+
+        public async Task<int> GetActiveUsersCountAsync()
+        {
+            return await _repo.GetActiveUsersCountAsync();
+        }
+
+        public async Task<int> GetActiveCustomersCountAsync()
+        {
+            return await _repo.GetActiveCustomersCountAsync();
+        }
+
+        public async Task<int> GetActiveEmployeesCountAsync()
+        {
+            return await _repo.GetActiveEmployeesCountAsync();
         }
     }
 }

@@ -48,6 +48,14 @@
         Refunded
     }
 
+    public enum SlotsTime
+    {
+        EightAm,
+        TenAm,
+        OnePm,
+        ThreePm,
+    }
+
     public enum Type
     {
         Modifications,

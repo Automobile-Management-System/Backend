@@ -13,7 +13,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Stripe;
+using automobile_backend.InterFaces.IServices;
+using Stripe; 
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -62,21 +64,29 @@ builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IServiceAnalyticsRepository, ServiceAnalyticsRepository>();
 builder.Services.AddScoped<IServiceAnalyticsService, ServiceAnalyticsService>();
 
-builder.Services.AddScoped<ICustomerModificationRequestRepository, CustomerModificationRequestRepository>();
-builder.Services.AddScoped<ICustomerModificationRequestService, CustomerModificationRequestService>();
+builder.Services.AddScoped<IEmployeeDashboardRepository, EmployeeDashboardRepository>();
+builder.Services.AddScoped<IEmployeeDashboardService, EmployeeDashboardService>();
 
-builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
-builder.Services.AddScoped<IVehicleService, VehicleService>();
+builder.Services.AddScoped<IProfileManagementRepository, ProfileManagementRepository>();
+builder.Services.AddScoped<IProfileManagementService, ProfileManagementService>();
 
+// Register Admin Dashboard
+builder.Services.AddScoped<IAdminDashboardRepository, AdminDashboardRepository>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 
 // Register Payment & Billing System
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 
+// Register the new Invoice Service
+builder.Services.AddScoped<IInvoiceService, automobile_backend.Services.InvoiceService>();
+
 // Register Notification & Alerts
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
-
+// Register Customer Vehicle Management
+builder.Services.AddScoped<ICustomerVehicleRepository, CustomerVehicleRepository>();
+builder.Services.AddScoped<ICustomerVehicleService, CustomerVehicleService>();
 
 // Register AI Chatbot Service
 builder.Services.AddHttpClient<IChatbotService, ChatbotService>();
@@ -89,6 +99,14 @@ builder.Services.AddScoped<IServiceProgressService, ServiceProgressService>();
 builder.Services.AddScoped<IViewServiceRepository, ViewServiceRepository>();
 builder.Services.AddScoped<IViewServiceService, ViewServiceService>();
 
+builder.Services.AddScoped<IAdminpaymentService, AdminpaymentService>();
+builder.Services.AddScoped<IAdminpaymentRepository, AdminpaymentRepository>();
+
+builder.Services.AddScoped<ICloudStorageService, CloudStorageService>();
+
+//added
+builder.Services.AddScoped<IServiceAppointmentRepository, ServiceAppointmentRepository>();
+builder.Services.AddScoped<IServiceAppointmentService, ServiceAppointmentService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -103,7 +121,11 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 // Configure Swagger to use JWT
@@ -182,6 +204,8 @@ builder.Services.AddAuthorization(options =>
 
 // Configure Stripe API Key
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 // 4. Build the application
 var app = builder.Build();

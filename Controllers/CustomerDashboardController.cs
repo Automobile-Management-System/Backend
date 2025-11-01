@@ -9,7 +9,7 @@ namespace automobile_backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Ensure user is logged in
+    [Authorize] 
     public class CustomerDashboardController : ControllerBase
     {
         private readonly ICustomerDashboardService _service;
@@ -19,9 +19,9 @@ namespace automobile_backend.Controllers
             _service = service;
         }
 
-        // POST: api/CustomerDashboard/vehicles
+        // add vehicles
         [HttpPost("vehicles")]
-        public async Task<IActionResult> AddVehicle([FromBody] CustomerVehicleDto dto)
+        public async Task<IActionResult> AddVehicle([FromBody] CreateVehicleDto dto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
@@ -33,7 +33,7 @@ namespace automobile_backend.Controllers
             return Ok(new { message = "Vehicle added successfully." });
         }
 
-        // GET: api/CustomerDashboard/vehicles
+        // view vehicles
         [HttpGet("vehicles")]
         public async Task<IActionResult> GetUserVehicles()
         {

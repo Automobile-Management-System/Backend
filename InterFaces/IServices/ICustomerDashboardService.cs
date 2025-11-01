@@ -7,8 +7,8 @@ namespace automobile_backend.Interfaces.IServices
 {
     public interface ICustomerDashboardService
     {
-        Task AddVehicleAsync(int userId, CustomerVehicleDto dto);
-        Task<List<CustomerVehicleDto>> GetVehiclesByUserIdAsync(int userId);
+        Task AddVehicleAsync(int userId, CreateVehicleDto dto);
+        Task<List<CreateVehicleDto>> GetVehiclesByUserIdAsync(int userId);
 
         Task<int> GetUpcomingAppointmentsCountAsync(int userId);
         Task<int> GetInProgressAppointmentsCountAsync(int userId);
