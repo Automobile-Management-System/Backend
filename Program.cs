@@ -70,6 +70,9 @@ builder.Services.AddScoped<IEmployeeDashboardService, EmployeeDashboardService>(
 builder.Services.AddScoped<IProfileManagementRepository, ProfileManagementRepository>();
 builder.Services.AddScoped<IProfileManagementService, ProfileManagementService>();
 
+builder.Services.AddScoped<IEmployeeTimeLogRepository, EmployeeTimeLogRepository>();
+builder.Services.AddScoped<IEmployeeTimeLogService, EmployeeTimeLogService>();
+
 // Register Admin Dashboard
 builder.Services.AddScoped<IAdminDashboardRepository, AdminDashboardRepository>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
