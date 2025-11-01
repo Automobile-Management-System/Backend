@@ -23,19 +23,18 @@ namespace automobile_backend.Repository
                                  .ToListAsync();
         }
 
-        public async Task AddAsync(ModificationRequest request)
-        {
-            _context.ModificationRequests.Add(request);
-            await _context.SaveChangesAsync();
-        }
-
-        // ✅ New method
         public async Task<IEnumerable<ModificationRequest>> GetByUserIdAsync(int userId)
         {
             return await _context.ModificationRequests
                                  .Include(m => m.Appointment)
-                                 .Where(m => m.Appointment.UserId == userId)
+                                 .Where(m => m.Appointment != null && m.Appointment.UserId == userId)
                                  .ToListAsync();
+        }
+
+        public async Task AddAsync(ModificationRequest modificationRequest)
+        {
+            _context.ModificationRequests.Add(modificationRequest);
+            await _context.SaveChangesAsync();
         }
     }
 }

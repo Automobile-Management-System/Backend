@@ -8,10 +8,9 @@ namespace automobile_backend.Models.DTOs
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public int VehicleId { get; set; }
-
         public DateTime CreatedDate { get; set; }
 
-        // Returns date in Sri Lanka time as string
+        // Formatted date/time strings for frontend
         public string CreatedDateString
         {
             get
@@ -20,11 +19,10 @@ namespace automobile_backend.Models.DTOs
                     CreatedDate.ToUniversalTime(),
                     TimeZoneInfo.FindSystemTimeZoneById("Sri Lanka Standard Time")
                 );
-                return slTime.ToString("dd MMM yyyy"); // e.g., 28 Oct 2025
+                return slTime.ToString("dd MMM yyyy");
             }
         }
 
-        // Returns time in Sri Lanka time as string
         public string CreatedTimeString
         {
             get
@@ -33,13 +31,12 @@ namespace automobile_backend.Models.DTOs
                     CreatedDate.ToUniversalTime(),
                     TimeZoneInfo.FindSystemTimeZoneById("Sri Lanka Standard Time")
                 );
-                return slTime.ToString("hh:mm tt"); // e.g., 09:15 AM
+                return slTime.ToString("hh:mm tt");
             }
         }
 
         public string RequestStatus { get; set; } = "Pending";
-        public int AppointmentId { get; set; }
-        public string AppointmentSummary { get; set; } = string.Empty;
-        public int UserId { get; set; }
+        public int AppointmentId { get; set; } = 0; // Optional, can be set later
+        public int UserId { get; set; } // Filled automatically from claims
     }
 }

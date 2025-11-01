@@ -1,7 +1,8 @@
-﻿using automobile_backend.InterFaces.IRepository;
-using automobile_backend.InterFaces.IServices;
+﻿using automobile_backend.InterFaces.IServices;
+using automobile_backend.InterFaces.IRepository;
 using automobile_backend.Models.DTOs;
 using automobile_backend.Models.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,60 +12,65 @@ namespace automobile_backend.Services
     public class CustomerModificationRequestService : ICustomerModificationRequestService
     {
         private readonly ICustomerModificationRequestRepository _requestRepository;
+        private readonly ApplicationDbContext _context;
 
-        public CustomerModificationRequestService(ICustomerModificationRequestRepository requestRepository)
+        public CustomerModificationRequestService(
+            ICustomerModificationRequestRepository requestRepository,
+            ApplicationDbContext context)
         {
             _requestRepository = requestRepository;
+            _context = context;
         }
 
-        // Get all modification requests
         public async Task<IEnumerable<CustomerModificationRequestDto>> GetAllModificationRequestsAsync()
         {
             var requests = await _requestRepository.GetAllAsync();
-            return requests.Select(MapToDto).ToList();
+            return requests.Select(MapToDto);
         }
 
-        // Add new modification request - default status: Pending
-        public async Task AddModificationRequestAsync(CustomerModificationRequestDto modificationRequestDto)
-        {
-            var entity = new ModificationRequest
-            {
-                Title = modificationRequestDto.Title,
-                Description = modificationRequestDto.Description,
-                AppointmentId = modificationRequestDto.AppointmentId,
-
-                // ✅ Set default status using enum
-                Status = ModificationStatus.Pending
-            };
-
-            await _requestRepository.AddAsync(entity);
-        }
-
-        // Get requests by user ID
         public async Task<IEnumerable<CustomerModificationRequestDto>> GetByUserIdAsync(int userId)
         {
             var requests = await _requestRepository.GetByUserIdAsync(userId);
-            return requests.Select(MapToDto).ToList();
+            return requests.Select(MapToDto);
         }
 
-        // Map entity to DTO
-        private CustomerModificationRequestDto MapToDto(ModificationRequest r)
+        public async Task AddModificationRequestAsync(CustomerModificationRequestDto dto)
         {
-            var createdDateUtc = r.Appointment.DateTime.ToUniversalTime();
+            // Step 1: Create appointment automatically
+            var appointment = new Appointment
+            {
+                UserId = dto.UserId,
+                VehicleId = dto.VehicleId,
+                Type = Models.Entities.Type.Modifications
+            };
 
-            // Convert enum to string for frontend
-            string status = r.Status.ToString();
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
 
+            // Step 2: Create modification request
+            var request = new ModificationRequest
+            {
+                Title = dto.Title,
+                Description = dto.Description,
+                AppointmentId = appointment.AppointmentId,
+                Status = ModificationStatus.Pending
+            };
+
+            await _requestRepository.AddAsync(request);
+        }
+
+        private CustomerModificationRequestDto MapToDto(ModificationRequest request)
+        {
             return new CustomerModificationRequestDto
             {
-                ModificationId = r.ModificationId,
-                Title = r.Title,
-                Description = r.Description,
-                VehicleId = r.Appointment.VehicleId,
-                CreatedDate = createdDateUtc,
-                RequestStatus = status,
-                AppointmentId = r.AppointmentId,
-                AppointmentSummary = $"Appointment #{r.AppointmentId} – {r.Appointment.Type}"
+                ModificationId = request.ModificationId,
+                Title = request.Title,
+                Description = request.Description,
+                VehicleId = request.Appointment?.VehicleId ?? 0,
+                CreatedDate = DateTime.UtcNow, // DTO will format automatically
+                RequestStatus = request.Status.ToString(),
+                AppointmentId = request.AppointmentId,
+                UserId = request.Appointment?.UserId ?? 0
             };
         }
     }
