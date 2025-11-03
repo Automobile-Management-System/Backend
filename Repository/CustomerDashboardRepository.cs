@@ -58,24 +58,40 @@ namespace automobile_backend.Repositories
                 .SumAsync(p => (decimal?)p.Amount ?? 0);
         }
 
-        public async Task<IEnumerable<Appointment>> GetLatestServicesAsync(int userId)
+        public async Task<List<object>> GetLatestServicesAsync(int userId)
         {
             return await _context.Appointments
-                .Include(a => a.CustomerVehicle)
+                .Include(a => a.AppointmentServices)
+                    .ThenInclude(asv => asv.Service)
                 .Where(a => a.UserId == userId && a.Type == Models.Entities.Type.Service)
                 .OrderByDescending(a => a.DateTime)
                 .Take(3)
-                .ToListAsync();
+                .Select(a => new
+                {
+                    Date = a.DateTime,
+                    Services = a.AppointmentServices
+                        .Select(asv => asv.Service.ServiceName)
+                        .ToList()
+                })
+                .ToListAsync<object>();
         }
 
-        public async Task<IEnumerable<Appointment>> GetLatestModificationsAsync(int userId)
+        public async Task<List<object>> GetLatestModificationsAsync(int userId)
         {
             return await _context.Appointments
-                .Include(a => a.CustomerVehicle)
+                .Include(a => a.ModificationRequests)
                 .Where(a => a.UserId == userId && a.Type == Models.Entities.Type.Modifications)
                 .OrderByDescending(a => a.DateTime)
                 .Take(3)
-                .ToListAsync();
+                .Select(a => new
+                {
+                    Date = a.DateTime,
+                    Modifications = a.ModificationRequests
+                        .Select(m => m.Title)
+                        .ToList()
+                })
+                .ToListAsync<object>();
         }
+
     }
 }

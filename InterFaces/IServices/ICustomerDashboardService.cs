@@ -14,7 +14,7 @@ namespace automobile_backend.Interfaces.IServices
         Task<int> GetInProgressAppointmentsCountAsync(int userId);
         Task<int> GetCompletedAppointmentsCountAsync(int userId);
         Task<decimal> GetPendingPaymentsTotalAsync(int userId);
-        Task<IEnumerable<Appointment>> GetLatestServicesAsync(int userId);
-        Task<IEnumerable<Appointment>> GetLatestModificationsAsync(int userId);
+        Task<List<object>> GetLatestServicesAsync(int userId);
+        Task<List<object>> GetLatestModificationsAsync(int userId);
     }
 }
