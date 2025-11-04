@@ -75,6 +75,20 @@ public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQue
                 return StatusCode(500, new { message = "Error retrieving assigned appointment counts", error = ex.Message });
             }
         }
+
+        [HttpGet("all-employees-daily-count")]
+public async Task<IActionResult> GetAllEmployeesWithDailyCount([FromQuery] DateTime date)
+{
+    try
+    {
+        var employees = await _employeeService.GetAllEmployeesWithDailyAssignmentCountAsync(date);
+        return Ok(employees);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = "Error retrieving employees with daily counts", error = ex.Message });
+    }
+}
     }
 }
 
