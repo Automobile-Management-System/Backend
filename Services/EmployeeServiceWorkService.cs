@@ -25,5 +25,10 @@ namespace automobile_backend.Services
         {
             return await _employeeWorkRepository.GetEmployeeAssignedAppointmentCountsAsync();
         }
+
+         public async Task<IEnumerable<object>> GetAllEmployeesWithDailyAssignmentCountAsync(DateTime date)
+        {
+return await _employeeWorkRepository.GetAllEmployeesWithDailyAssignmentCountAsync(date);
+        }
     }
 }
