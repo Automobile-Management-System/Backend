@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TypeEnum = automobile_backend.Models.Entities.Type; // avoid clash with System.Type
 
 namespace automobile_backend.Services
 {
@@ -111,11 +112,12 @@ namespace automobile_backend.Services
             {
                 UserId = userId,
                 VehicleId = dto.VehicleId,
-                DateTime = start, // ✅ Use start instead of day
+                DateTime = start, 
                 SlotsTime = dto.SlotsTime,
                 StartDateTime = start,
                 EndDateTime = end,
                 Status = AppointmentStatus.Pending,
+                Type = TypeEnum.Service,
                 AppointmentServices = new List<automobile_backend.Models.Entities.AppointmentService>()
             };
 
