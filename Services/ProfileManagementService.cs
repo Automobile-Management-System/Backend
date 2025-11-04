@@ -18,20 +18,8 @@ namespace automobile_backend.Services
 
         public async Task<ProfileManagementDto?> GetCurrentUserProfileAsync(int userId)
         {
-            var user = await _repo.GetByIdAsync(userId);
-            if (user == null) return null;
-
-            return new ProfileManagementDto
-            {
-                UserId = user.UserId,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                PhoneNumber = user.PhoneNumber,
-                Address = user.Address,
-                ProfilePicture = user.ProfilePicture,
-                Status = user.Status
-            };
+            // Use the optimized method that directly returns DTO without loading the full entity
+            return await _repo.GetProfileDtoByIdAsync(userId);
         }
 
         public async Task<User?> GetUserEntityByIdAsync(int userId)
@@ -41,14 +29,15 @@ namespace automobile_backend.Services
 
         public async Task<(bool Success, string? ErrorMessage)> UpdateCurrentUserProfileAsync(int userId, ProfileUpdateDto updateDto)
         {
-            var user = await _repo.GetByIdAsync(userId);
+            // Use lightweight method for getting user for updates
+            var user = await _repo.GetUserForUpdateAsync(userId);
             if (user == null) return (false, "User not found.");
 
-            // If email change requested, ensure uniqueness
+            // If email change requested, use optimized email existence check
             if (!string.IsNullOrWhiteSpace(updateDto.Email) && !string.Equals(updateDto.Email, user.Email, StringComparison.OrdinalIgnoreCase))
             {
-                var existing = await _repo.GetByEmailAsync(updateDto.Email);
-                if (existing != null && existing.UserId != userId)
+                var emailExists = await _repo.EmailExistsAsync(updateDto.Email, userId);
+                if (emailExists)
                 {
                     return (false, "Email already in use by another account.");
                 }

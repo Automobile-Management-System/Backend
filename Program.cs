@@ -14,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using automobile_backend.InterFaces.IServices;
-using Stripe; 
+using Stripe;
 using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,6 +51,9 @@ builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IModificationRequestRepository, ModificationRequestRepository>();
 builder.Services.AddScoped<IModificationRequestService, ModificationRequestService>();
 
+builder.Services.AddScoped<ICustomerModificationRequestRepository, CustomerModificationRequestRepository>();
+builder.Services.AddScoped<ICustomerModificationRequestService, CustomerModificationRequestService>();
+
 
 builder.Services.AddScoped<IEmployeeServiceWorkRepository, EmployeeServiceWorkRepository>();
 builder.Services.AddScoped<IEmployeeServiceWorkService, EmployeeServiceWorkService>();
@@ -69,6 +72,9 @@ builder.Services.AddScoped<IEmployeeDashboardService, EmployeeDashboardService>(
 
 builder.Services.AddScoped<IProfileManagementRepository, ProfileManagementRepository>();
 builder.Services.AddScoped<IProfileManagementService, ProfileManagementService>();
+
+builder.Services.AddScoped<IEmployeeTimeLogRepository, EmployeeTimeLogRepository>();
+builder.Services.AddScoped<IEmployeeTimeLogService, EmployeeTimeLogService>();
 
 // Register Admin Dashboard
 builder.Services.AddScoped<IAdminDashboardRepository, AdminDashboardRepository>();
