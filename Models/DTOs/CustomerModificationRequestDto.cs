@@ -38,5 +38,19 @@ namespace automobile_backend.Models.DTOs
         public string RequestStatus { get; set; } = "Pending"; // from Appointment.Status
         public int AppointmentId { get; set; } = 0;
         public int UserId { get; set; } // filled automatically from claims
+
+        public string VehicleRegistrationNumber { get; set; } = string.Empty;
+        public DateTime RequestDate { get; set; }
+
+        public decimal Amount { get; set; } // Actual amount from Appointment
+        public string DisplayAmount
+        {
+            get
+            {
+                return RequestStatus == "Pending"
+                    ? "After admin approval show amount"
+                    : Amount.ToString("C2"); // format as currency
+            }
+        }
     }
 }
