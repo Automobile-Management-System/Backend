@@ -121,7 +121,7 @@ namespace automobile_backend.Controllers
         [HttpGet("profile"), Authorize]
         public async Task<IActionResult> GetProfile()
         {
-            // MODIFIED: Return full user info
+            // MODIFIED: Return full user info including employee/customer ID
             var userEmail = User.FindFirstValue(ClaimTypes.Email);
             if (string.IsNullOrEmpty(userEmail))
             {
@@ -134,15 +134,80 @@ namespace automobile_backend.Controllers
                 return NotFound("User not found.");
             }
 
+            // Base user data
             var userDto = new
             {
+                id = user.UserId,
                 email = user.Email,
                 firstName = user.FirstName,
                 lastName = user.LastName,
                 role = user.Role.ToString()
             };
 
+            // For employees and customers, add the specific ID (which is the same as UserId in this system)
+            if (user.Role == Enums.Employee)
+            {
+                var employeeProfile = new
+                {
+                    userDto.id,
+                    employeeId = user.UserId, // Employee ID is the same as User ID
+                    userDto.email,
+                    userDto.firstName,
+                    userDto.lastName,
+                    userDto.role
+                };
+                return Ok(employeeProfile);
+            }
+            else if (user.Role == Enums.Customer)
+            {
+                var customerProfile = new
+                {
+                    userDto.id,
+                    customerId = user.UserId, // Customer ID is the same as User ID
+                    userDto.email,
+                    userDto.firstName,
+                    userDto.lastName,
+                    userDto.role
+                };
+                return Ok(customerProfile);
+            }
+
+            // For other roles (Admin), return basic profile
             return Ok(userDto);
+        }
+
+        [HttpGet("employee-profile"), Authorize(Roles = "Employee")]
+        public async Task<IActionResult> GetEmployeeProfile()
+        {
+            var userEmail = User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return Unauthorized();
+            }
+
+            var user = await _authService.GetUserByEmailAsync(userEmail);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            if (user.Role != Enums.Employee)
+            {
+                return Forbid("Access denied. This endpoint is only for employees.");
+            }
+
+            var employeeProfile = new
+            {
+                id = user.UserId,
+                employeeId = user.UserId, // Employee ID is the same as User ID
+                userId = user.UserId,
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                role = user.Role.ToString()
+            };
+
+            return Ok(employeeProfile);
         }
 
         [HttpGet("admin-data"), Authorize(Roles = "Admin")]
