@@ -10,5 +10,6 @@ namespace automobile_backend.InterFaces.IServices
 
         // ✅ Added
         Task<IEnumerable<object>> GetEmployeeAssignedAppointmentCountsAsync();
+         Task<IEnumerable<object>> GetAllEmployeesWithDailyAssignmentCountAsync(DateTime date);
     }
 }

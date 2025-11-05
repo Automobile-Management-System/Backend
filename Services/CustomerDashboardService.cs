@@ -60,10 +60,10 @@ namespace automobile_backend.Services
         public async Task<decimal> GetPendingPaymentsTotalAsync(int userId)
             => await _repository.GetPendingPaymentsTotalAsync(userId);
 
-        public Task<IEnumerable<Appointment>> GetLatestServicesAsync(int userId)
-           => _repository.GetLatestServicesAsync(userId);
+        public Task<List<object>> GetLatestServicesAsync(int userId)
+        => _repository.GetLatestServicesAsync(userId);
 
-        public Task<IEnumerable<Appointment>> GetLatestModificationsAsync(int userId)
+        public Task<List<object>> GetLatestModificationsAsync(int userId)
             => _repository.GetLatestModificationsAsync(userId);
     }
 }

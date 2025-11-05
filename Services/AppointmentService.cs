@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TypeEnum = automobile_backend.Models.Entities.Type; // avoid clash with System.Type
 
 namespace automobile_backend.Services
 {
@@ -40,7 +41,6 @@ namespace automobile_backend.Services
         {
             var day = date.Date;
 
-            // Count only appointments that actually occupy capacity (exclude rejected)
             var bookings = await _context.Appointments
                 .Where(a => a.DateTime.Date == day && a.Status != AppointmentStatus.Rejected)
                 .GroupBy(a => a.SlotsTime)
@@ -54,7 +54,7 @@ namespace automobile_backend.Services
                 {
                     Slot = slot,
                     Booked = bookedLookup.TryGetValue(slot, out var count) ? count : 0,
-                    Capacity = SlotCapacity // ensure API consumers see the true capacity
+                    Capacity = SlotCapacity
                 })
                 .ToList();
 
@@ -99,7 +99,6 @@ namespace automobile_backend.Services
 
             var (start, end) = GetSlotRange(day, dto.SlotsTime);
 
-            // Enforce capacity at booking time (exclude rejected)
             var currentCount = await _context.Appointments
                 .Where(a => a.DateTime.Date == day && a.SlotsTime == dto.SlotsTime && a.Status != AppointmentStatus.Rejected)
                 .CountAsync();
@@ -107,15 +106,20 @@ namespace automobile_backend.Services
             if (currentCount >= SlotCapacity)
                 throw new Exception("Selected time slot is fully booked.");
 
+            // Calculate total amount from selected services
+            var totalAmount = services.Sum(s => (decimal?)s.BasePrice ?? 0m);
+
             var appointment = new Appointment
             {
                 UserId = userId,
                 VehicleId = dto.VehicleId,
-                DateTime = start, // ✅ Use start instead of day
+                DateTime = start,
                 SlotsTime = dto.SlotsTime,
                 StartDateTime = start,
                 EndDateTime = end,
                 Status = AppointmentStatus.Pending,
+                Type = TypeEnum.Service,
+                Amount = totalAmount, // save total
                 AppointmentServices = new List<automobile_backend.Models.Entities.AppointmentService>()
             };
 

@@ -12,6 +12,7 @@ namespace automobile_backend.InterFaces.IRepository
         Task<IEnumerable<ServiceCompletionDto>> GetServiceCompletionRatesAsync();
         Task<IEnumerable<EmployeePerformanceDto>> GetEmployeePerformanceAsync();
         Task<RevenueStatsDto> GetRevenueStatsAsync();
+        Task<RevenueTrendDto> GetRevenueTrendAsync();
         Task<CustomerActivityDto> GetCustomerActivityAsync();
         Task<int> SaveReportAsync(Report report);
     }

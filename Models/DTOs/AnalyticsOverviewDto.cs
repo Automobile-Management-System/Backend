@@ -4,10 +4,9 @@ namespace automobile_backend.Models.DTOs
 {
     public class AnalyticsOverviewDto
     {
-        public int TotalAppointments { get; set; }
-        public int CompletedAppointments { get; set; }
-        public decimal TotalRevenue { get; set; }
-        public int TotalCustomers { get; set; }
-        public int TotalEmployees { get; set; }
+        public decimal TotalRevenue { get; set; } // Year to date
+        public int TotalAppointments { get; set; } // Total bookings (not just completed)
+        public decimal AverageRevenuePerMonth { get; set; } // Per month
+        public double GrowthRate { get; set; } // Month over month percentage
     }
 }
