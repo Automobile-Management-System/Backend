@@ -52,5 +52,13 @@ namespace automobile_backend.Repository
                     .ThenInclude(a => a.User)
                 .FirstOrDefaultAsync(p => p.PaymentId == paymentId);
         }
+
+        // NEW - Implementation for creating a new payment record
+        public async Task<Payment> CreateAsync(Payment payment)
+        {
+            _context.Payments.Add(payment);
+            await _context.SaveChangesAsync();
+            return payment;
+        }
     }
 }

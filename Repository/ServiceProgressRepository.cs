@@ -21,7 +21,7 @@ namespace automobile_backend.Repository
                 .Include(a => a.TimeLogs)
                 .Include(a => a.EmployeeAppointments)
                 .Where(a => a.EmployeeAppointments.Any(ea => ea.UserId == employeeId))
-                .Where(a => a.Status == AppointmentStatus.InProgress || a.Status == AppointmentStatus.Pending)
+                .Where(a => a.Status == AppointmentStatus.Upcoming)
                 .OrderBy(a => a.DateTime)
                 .ToListAsync();
         }

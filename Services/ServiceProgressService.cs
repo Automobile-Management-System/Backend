@@ -8,10 +8,12 @@ namespace automobile_backend.Services
     public class ServiceProgressService : IServiceProgressService
     {
         private readonly IServiceProgressRepository _repository;
+        private readonly IPaymentRepository _paymentRepository;
 
-        public ServiceProgressService(IServiceProgressRepository repository)
+        public ServiceProgressService(IServiceProgressRepository repository, IPaymentRepository paymentRepository)
         {
             _repository = repository;
+            _paymentRepository = paymentRepository;
         }
 
         public async Task<IEnumerable<ServiceProgressDto>> GetEmployeeServiceProgressAsync(int employeeId)
@@ -219,6 +221,9 @@ namespace automobile_backend.Services
                     appointment.Status = AppointmentStatus.Completed;
                     appointment.EndDateTime = DateTime.UtcNow;
                     await _repository.UpdateAppointmentAsync(appointment);
+
+                    // Create payment record for completed appointment
+                    await CreatePaymentRecordAsync(appointment);
                 }
 
                 var totalTime = await GetTotalLoggedTimeAsync(timerAction.AppointmentId);
@@ -278,6 +283,9 @@ namespace automobile_backend.Services
                         activeTimer.IsActive = false;
                         await _repository.UpdateTimeLogAsync(activeTimer);
                     }
+
+                    // Create payment record for completed appointment
+                    await CreatePaymentRecordAsync(appointment);
                 }
 
                 await _repository.UpdateAppointmentAsync(appointment);
@@ -314,6 +322,38 @@ namespace automobile_backend.Services
             var serviceType = appointment.Type == automobile_backend.Models.Entities.Type.Service ? "Service" : "Modifications";
             var vehicleInfo = appointment.CustomerVehicle?.Brand + " " + appointment.CustomerVehicle?.Model;
             return $"{serviceType} - {vehicleInfo}";
+        }
+
+        private async Task CreatePaymentRecordAsync(Appointment appointment)
+        {
+            try
+            {
+                // Check if payment already exists for this appointment
+                var existingPayment = await _paymentRepository.GetByAppointmentIdAsync(appointment.AppointmentId);
+                if (existingPayment != null)
+                {
+                    // Payment already exists, skip creation
+                    return;
+                }
+
+                // Create new payment record with status 0 (Pending)
+                var payment = new Payment
+                {
+                    AppointmentId = appointment.AppointmentId,
+                    Amount = appointment.Amount,
+                    Status = PaymentStatus.Pending, // Status 0
+                    PaymentMethod = PaymentMethod.Cash, // Default payment method
+                    PaymentDateTime = DateTime.UtcNow
+                };
+
+                await _paymentRepository.CreateAsync(payment);
+            }
+            catch (Exception ex)
+            {
+                // Log the error but don't throw - payment creation failure shouldn't break appointment completion
+                // In a real application, you would log this to a logging service
+                Console.WriteLine($"Error creating payment record: {ex.Message}");
+            }
         }
     }
 }

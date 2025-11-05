@@ -11,12 +11,15 @@ namespace automobile_backend.InterFaces.IRepository
 
         // UPDATED - Now includes related data needed for DTOs and validation
         Task<Payment?> GetByAppointmentIdAsync(int appointmentId);
-        
+
         Task<Payment> UpdateAsync(Payment payment);
 
         // NEW - Gets all payments (with Appointment details) for a specific user ID
         Task<IEnumerable<Payment>> GetPaymentsForUserAsync(int userId);
 
         Task<Payment?> GetPaymentForInvoiceAsync(int paymentId);
+
+        // NEW - Create a new payment record
+        Task<Payment> CreateAsync(Payment payment);
     }
 }
