@@ -102,13 +102,13 @@ namespace automobile_backend.Services
                                 });
 
                                 table.Cell().Element(CellStyle).Text("Total Revenue (Year to Date)");
-                                table.Cell().Element(CellStyle).Text($"${overview.TotalRevenue:F2}");
+                                table.Cell().Element(CellStyle).Text($"Rs {overview.TotalRevenue:N2}");
 
                                 table.Cell().Element(CellStyle).Text("Total Appointments");
                                 table.Cell().Element(CellStyle).Text(overview.TotalAppointments.ToString());
 
                                 table.Cell().Element(CellStyle).Text("Average Revenue per Month");
-                                table.Cell().Element(CellStyle).Text($"${overview.AverageRevenuePerMonth:F2}");
+                                table.Cell().Element(CellStyle).Text($"Rs {overview.AverageRevenuePerMonth:N2}");
 
                                 table.Cell().Element(CellStyle).Text("Growth Rate (Month over Month)");
                                 table.Cell().Element(CellStyle).Text($"{overview.GrowthRate:F2}%");
@@ -139,7 +139,7 @@ namespace automobile_backend.Services
                                 {
                                     table.Cell().Element(CellStyle).Text(emp.EmployeeName);
                                     table.Cell().Element(CellStyle).Text(emp.CompletedAppointments.ToString());
-                                    table.Cell().Element(CellStyle).Text($"${emp.RevenueGenerated:F2}");
+                                    table.Cell().Element(CellStyle).Text($"Rs {emp.RevenueGenerated:N2}");
                                     table.Cell().Element(CellStyle).Text($"? {emp.AverageRating:F1}");
                                 }
                             });
@@ -158,13 +158,13 @@ namespace automobile_backend.Services
                                 table.Header(header =>
                                 {
                                     header.Cell().Element(CellStyle).Text("Month");
-                                    header.Cell().Element(CellStyle).Text("Revenue ($)");
+                                    header.Cell().Element(CellStyle).Text("Revenue (LKR)");
                                 });
 
                                 foreach (var rev in revenue.RevenueByMonth)
                                 {
                                     table.Cell().Element(CellStyle).Text(rev.Key);
-                                    table.Cell().Element(CellStyle).Text($"${rev.Value:F2}");
+                                    table.Cell().Element(CellStyle).Text($"Rs {rev.Value:N2}");
                                 }
                             });
 
@@ -183,14 +183,14 @@ namespace automobile_backend.Services
                                 table.Header(header =>
                                 {
                                     header.Cell().Element(CellStyle).Text("Month");
-                                    header.Cell().Element(CellStyle).Text("Revenue ($)");
+                                    header.Cell().Element(CellStyle).Text("Revenue (LKR)");
                                     header.Cell().Element(CellStyle).Text("Appointments");
                                 });
 
                                 foreach (var month in revenueTrend.RevenueByMonth.Keys)
                                 {
                                     table.Cell().Element(CellStyle).Text(month);
-                                    table.Cell().Element(CellStyle).Text($"${revenueTrend.RevenueByMonth[month]:F2}");
+                                    table.Cell().Element(CellStyle).Text($"Rs {revenueTrend.RevenueByMonth[month]:N2}");
                                     table.Cell().Element(CellStyle).Text(revenueTrend.AppointmentsByMonth.GetValueOrDefault(month, 0).ToString());
                                 }
                             });

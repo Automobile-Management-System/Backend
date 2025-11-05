@@ -7,6 +7,7 @@ namespace automobile_backend.Models.DTOs
     {
        public List<string> Days { get; set; } = new List<string>(); // ["Mon", "Tue", "Wed", ...]
       public List<decimal> RevenueList { get; set; } = new List<decimal>(); // Revenue for each day
+        public string Currency { get; set; } = "LKR"; // Currency indicator
     }
 
     public class WeeklyAppointmentsDto
