@@ -38,6 +38,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // ==> ADD THIS: Required to access HttpContext in services like AuthService
 builder.Services.AddHttpContextAccessor();
 
+// Add Memory Cache - ADD THIS LINE
+builder.Services.AddMemoryCache();
+
 // Register all your application services and repositories
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
