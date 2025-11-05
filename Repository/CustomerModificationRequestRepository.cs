@@ -20,6 +20,7 @@ namespace automobile_backend.Repository
         {
             return await _context.ModificationRequests
                                  .Include(m => m.Appointment)
+                                 .ThenInclude(a => a.CustomerVehicle) // ✅ Correct include
                                  .ToListAsync();
         }
 
@@ -27,6 +28,7 @@ namespace automobile_backend.Repository
         {
             return await _context.ModificationRequests
                                  .Include(m => m.Appointment)
+                                 .ThenInclude(a => a.CustomerVehicle)
                                  .Where(m => m.Appointment != null && m.Appointment.UserId == userId)
                                  .ToListAsync();
         }

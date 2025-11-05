@@ -25,25 +25,38 @@ namespace automobile_backend.Services
         public async Task<IEnumerable<CustomerModificationRequestDto>> GetAllModificationRequestsAsync()
         {
             var requests = await _requestRepository.GetAllAsync();
-            return requests.Select(MapToDto);
+
+            // Sort by CreatedDate descending (newest first)
+            return requests
+                .Select(MapToDto)
+                .OrderByDescending(r => r.RequestDate);
         }
 
         public async Task<IEnumerable<CustomerModificationRequestDto>> GetByUserIdAsync(int userId)
         {
             var requests = await _requestRepository.GetByUserIdAsync(userId);
-            return requests.Select(MapToDto);
+
+            // Sort by CreatedDate descending (newest first)
+            return requests
+                .Select(MapToDto)
+                .OrderByDescending(r => r.RequestDate);
         }
 
-        public async Task AddModificationRequestAsync(CustomerModificationRequestDto dto)
+        public async Task<CustomerModificationRequestDto> AddModificationRequestAsync(CustomerModificationRequestDto dto)
         {
-            // Step 1: Create appointment automatically
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+
+            // Step 1: Create appointment with default Amount = 0
             var appointment = new Appointment
             {
                 UserId = dto.UserId,
                 VehicleId = dto.VehicleId,
-                Type = Models.Entities.Type.Modifications,        // Fully qualified enum
-                Status = Models.Entities.AppointmentStatus.Pending, // Fully qualified enum
-                DateTime = DateTime.UtcNow                           // Default appointment time
+                Type = Models.Entities.Type.Modifications,
+                Status = Models.Entities.AppointmentStatus.Pending,
+                DateTime = dto.RequestDate,
+                StartDateTime = dto.RequestDate,
+                EndDateTime = dto.RequestDate.AddHours(1),
+                Amount = 0 // initial amount is 0 until admin approves
             };
 
             _context.Appointments.Add(appointment);
@@ -58,20 +71,30 @@ namespace automobile_backend.Services
             };
 
             await _requestRepository.AddAsync(request);
+
+            // Step 3: Map and return DTO
+            return MapToDto(request);
         }
 
+        // Map entity to DTO including Amount
         private CustomerModificationRequestDto MapToDto(ModificationRequest request)
         {
+            var appointment = request.Appointment;
+            var vehicleRegNo = appointment?.CustomerVehicle?.RegistrationNumber ?? "N/A";
+
             return new CustomerModificationRequestDto
             {
                 ModificationId = request.ModificationId,
                 Title = request.Title,
                 Description = request.Description,
-                VehicleId = request.Appointment?.VehicleId ?? 0,
-                CreatedDate = DateTime.UtcNow, // DTO formatting will handle this
-                RequestStatus = request.Appointment?.Status.ToString() ?? "Pending", // AppointmentStatus
+                VehicleId = appointment?.VehicleId ?? 0,
+                VehicleRegistrationNumber = vehicleRegNo,
+                CreatedDate = appointment?.DateTime ?? DateTime.UtcNow,
+                RequestStatus = appointment?.Status.ToString() ?? "Pending",
                 AppointmentId = request.AppointmentId,
-                UserId = request.Appointment?.UserId ?? 0
+                UserId = appointment?.UserId ?? 0,
+                RequestDate = appointment?.DateTime ?? DateTime.UtcNow,
+                Amount = appointment?.Amount ?? 0 // include the amount
             };
         }
     }

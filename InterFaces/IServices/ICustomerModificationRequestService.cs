@@ -7,7 +7,7 @@ namespace automobile_backend.InterFaces.IServices
     public interface ICustomerModificationRequestService
     {
         Task<IEnumerable<CustomerModificationRequestDto>> GetAllModificationRequestsAsync();
-        Task AddModificationRequestAsync(CustomerModificationRequestDto customermodificationRequestDto);
+        Task<CustomerModificationRequestDto> AddModificationRequestAsync(CustomerModificationRequestDto dto); // ✅ return DTO
         Task<IEnumerable<CustomerModificationRequestDto>> GetByUserIdAsync(int userId);
     }
 }
