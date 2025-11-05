@@ -1,61 +1,27 @@
+using System;
+using System.Collections.Generic;
+
 namespace automobile_backend.Models.DTOs
 {
-    public class AdminDashboardDto
-    {
-        public AdminDashboardStatsDto Stats { get; set; } = new();
-        public AdminDashboardChartsDto Charts { get; set; } = new();
-        public List<RecentUserDto> RecentUsers { get; set; } = new();
-        public List<SystemAlertDto> SystemAlerts { get; set; } = new();
-    }
-
-    public class AdminDashboardStatsDto
-    {
-        public int TotalUsers { get; set; }
-        public int TotalUsersChangeFromLastMonth { get; set; }
-        public int ActiveBookings { get; set; }
-        public int ActiveBookingsChangeFromLastMonth { get; set; }
-        public decimal MonthlyRevenue { get; set; }
-        public decimal MonthlyRevenueChangeFromLastMonth { get; set; }
-        public decimal GrowthRate { get; set; }
-        public decimal GrowthRateChangeFromLastMonth { get; set; }
-    }
-
-    public class AdminDashboardChartsDto
-    {
-        public List<WeeklyRevenueDto> WeeklyRevenue { get; set; } = new();
-        public List<WeeklyAppointmentDto> WeeklyAppointments { get; set; } = new();
-    }
-
     public class WeeklyRevenueDto
     {
-        public string Day { get; set; } = string.Empty;
-        public decimal Revenue { get; set; }
+       public List<string> Days { get; set; } = new List<string>(); // ["Mon", "Tue", "Wed", ...]
+      public List<decimal> RevenueList { get; set; } = new List<decimal>(); // Revenue for each day
     }
 
-    public class WeeklyAppointmentDto
+    public class WeeklyAppointmentsDto
     {
-        public string Day { get; set; } = string.Empty;
-        public int AppointmentCount { get; set; }
+  public List<string> Days { get; set; } = new List<string>(); // ["Mon", "Tue", "Wed", ...]
+     public List<int> Appointments { get; set; } = new List<int>(); // Appointment count for each day
     }
 
     public class RecentUserDto
     {
-        public int UserId { get; set; }
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
+      public int UserId { get; set; }
+   public string FullName { get; set; } = string.Empty;
+   public string Email { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
-        public string TimeAgo { get; set; } = string.Empty;
-        public DateTime CreatedDate { get; set; }
-    }
-
-    public class SystemAlertDto
-    {
-        public int Id { get; set; }
-        public string Type { get; set; } = string.Empty; // warning, info, success
-        public string Message { get; set; } = string.Empty;
-        public string ActionText { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; }
-        public bool IsRead { get; set; }
+ public string? ProfilePicture { get; set; }
+     public DateTime RegisteredDate { get; set; }
     }
 }

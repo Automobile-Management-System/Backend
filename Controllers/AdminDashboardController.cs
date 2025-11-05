@@ -2,12 +2,15 @@ using automobile_backend.InterFaces.IServices;
 using automobile_backend.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace automobile_backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    // [Authorize(Policy = "AdminOnly")] // Temporarily commented for testing
+    [Authorize(Policy = "AdminOnly")]
     public class AdminDashboardController : ControllerBase
     {
         private readonly IAdminDashboardService _adminDashboardService;
@@ -18,53 +21,53 @@ namespace automobile_backend.Controllers
         }
 
         /// <summary>
-        /// Get complete admin dashboard data including stats, charts, recent users, and alerts
+        /// Get dashboard overview cards (Total Revenue, Total Users, Total Customers, Total Appointments)
         /// </summary>
-        [HttpGet]
-        public async Task<ActionResult<AdminDashboardDto>> GetDashboardData()
+        [HttpGet("overview")]
+        public async Task<ActionResult<AdminDashboardOverviewDto>> GetDashboardOverview()
         {
             try
             {
-                var dashboardData = await _adminDashboardService.GetDashboardDataAsync();
-                return Ok(dashboardData);
+                var overview = await _adminDashboardService.GetDashboardOverviewAsync();
+                return Ok(overview);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while fetching dashboard data", error = ex.Message });
+                return StatusCode(500, new { message = "An error occurred while fetching dashboard overview", error = ex.Message });
             }
         }
 
         /// <summary>
-        /// Get dashboard statistics (total users, active bookings, revenue, growth rate)
+        /// Get weekly revenue data for graph (Monday to Sunday)
         /// </summary>
-        [HttpGet("stats")]
-        public async Task<ActionResult<AdminDashboardStatsDto>> GetDashboardStats()
+        [HttpGet("weekly-revenue")]
+        public async Task<ActionResult<WeeklyRevenueDto>> GetWeeklyRevenue()
         {
             try
             {
-                var stats = await _adminDashboardService.GetDashboardStatsAsync();
-                return Ok(stats);
+                var weeklyRevenue = await _adminDashboardService.GetWeeklyRevenueAsync();
+                return Ok(weeklyRevenue);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while fetching dashboard stats", error = ex.Message });
+                return StatusCode(500, new { message = "An error occurred while fetching weekly revenue", error = ex.Message });
             }
         }
 
         /// <summary>
-        /// Get dashboard charts data (weekly revenue and appointments)
+        /// Get weekly appointments data for graph (Monday to Sunday)
         /// </summary>
-        [HttpGet("charts")]
-        public async Task<ActionResult<AdminDashboardChartsDto>> GetDashboardCharts()
+        [HttpGet("weekly-appointments")]
+        public async Task<ActionResult<WeeklyAppointmentsDto>> GetWeeklyAppointments()
         {
             try
             {
-                var charts = await _adminDashboardService.GetDashboardChartsAsync();
-                return Ok(charts);
+                var weeklyAppointments = await _adminDashboardService.GetWeeklyAppointmentsAsync();
+                return Ok(weeklyAppointments);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while fetching dashboard charts", error = ex.Message });
+                return StatusCode(500, new { message = "An error occurred while fetching weekly appointments", error = ex.Message });
             }
         }
 
@@ -72,68 +75,21 @@ namespace automobile_backend.Controllers
         /// Get recent users list
         /// </summary>
         [HttpGet("recent-users")]
-        public async Task<ActionResult<List<RecentUserDto>>> GetRecentUsers([FromQuery] int limit = 10)
+        public async Task<ActionResult<IEnumerable<RecentUserDto>>> GetRecentUsers([FromQuery] int count = 10)
         {
             try
             {
-                if (limit <= 0 || limit > 50)
+                if (count <= 0 || count > 50)
                 {
-                    return BadRequest(new { message = "Limit must be between 1 and 50" });
+                    return BadRequest(new { message = "Count must be between 1 and 50" });
                 }
 
-                var recentUsers = await _adminDashboardService.GetRecentUsersAsync(limit);
+                var recentUsers = await _adminDashboardService.GetRecentUsersAsync(count);
                 return Ok(recentUsers);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "An error occurred while fetching recent users", error = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Get system alerts
-        /// </summary>
-        [HttpGet("alerts")]
-        public async Task<ActionResult<List<SystemAlertDto>>> GetSystemAlerts()
-        {
-            try
-            {
-                var alerts = await _adminDashboardService.GetSystemAlertsAsync();
-                return Ok(alerts);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while fetching system alerts", error = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Mark a system alert as read
-        /// </summary>
-        [HttpPut("alerts/{alertId}/mark-read")]
-        public async Task<ActionResult> MarkAlertAsRead(int alertId)
-        {
-            try
-            {
-                if (alertId <= 0)
-                {
-                    return BadRequest(new { message = "Invalid alert ID" });
-                }
-
-                var result = await _adminDashboardService.MarkAlertAsReadAsync(alertId);
-                
-                if (result)
-                {
-                    return Ok(new { message = "Alert marked as read successfully" });
-                }
-                else
-                {
-                    return NotFound(new { message = "Alert not found" });
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while marking alert as read", error = ex.Message });
             }
         }
     }
