@@ -55,6 +55,13 @@ namespace automobile_backend.Controllers
             return Ok(revenue);
         }
 
+        [HttpGet("revenue-trend")]
+        public async Task<ActionResult<RevenueTrendDto>> GetRevenueTrend()
+        {
+            var trend = await _service.GetRevenueTrendAsync();
+            return Ok(trend);
+        }
+
         [HttpGet("customer-activity")]
         public async Task<ActionResult<CustomerActivityDto>> GetCustomerActivity()
         {
