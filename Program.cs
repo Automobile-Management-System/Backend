@@ -1,8 +1,10 @@
 using System.Text;
+using automobile_backend.Hubs;
 using automobile_backend.Interfaces.IRepositories;
 using automobile_backend.Interfaces.IServices;
 using automobile_backend.InterFaces.IRepositories;
 using automobile_backend.InterFaces.IRepository;
+using automobile_backend.InterFaces.IServices;
 using automobile_backend.InterFaces.IServices;
 using automobile_backend.Repositories;
 using automobile_backend.Repositories.Interfaces;
@@ -13,9 +15,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using automobile_backend.InterFaces.IServices;
-using Stripe;
 using QuestPDF.Infrastructure;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -216,6 +217,9 @@ StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 QuestPDF.Settings.License = LicenseType.Community;
 
+// Add SignalR
+builder.Services.AddSignalR();
+
 // 4. Build the application
 var app = builder.Build();
 
@@ -228,9 +232,11 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection(); // Keep commented for local http development
 app.UseCors(MyAllowSpecificOrigins);
-
+app.MapHub<AdminNotificationHub>("/hubs/admin-notify");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 app.Run();
+
+
