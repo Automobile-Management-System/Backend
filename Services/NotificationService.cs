@@ -1,32 +1,182 @@
 using automobile_backend.InterFaces.IServices;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Net.Mail;
+using System.Text;
 
 namespace automobile_backend.Services
 {
     public class NotificationService : INotificationService
     {
-        public NotificationService()
+        private readonly ApplicationDbContext _db;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<NotificationService> _logger;
+
+        public NotificationService(ApplicationDbContext db, IConfiguration configuration, ILogger<NotificationService> logger)
         {
-            // Constructor for dependency injection (e.g., IHubContext for SignalR)
+            _db = db;
+            _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task SendAppointmentReminderAsync(int appointmentId)
         {
-            // TODO: Logic to fetch appointment, get user contact, and send email/SMS
             await Task.CompletedTask;
         }
 
         public async Task SendStatusUpdateAsync(string entityType, int entityId, string newStatus)
         {
-            // TODO: Logic to send an update notification
-            await Task.CompletedTask;
+            try
+            {
+                if (!string.Equals(entityType, "Appointment", StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                var appt = await _db.Appointments
+                    .Include(a => a.User)
+                    .Include(a => a.CustomerVehicle)
+                    .Include(a => a.AppointmentServices).ThenInclude(aps => aps.Service)
+                    .FirstOrDefaultAsync(a => a.AppointmentId == entityId);
+
+                if (appt == null)
+                {
+                    _logger.LogWarning("Appointment {AppointmentId} not found. Skipping email.", entityId);
+                    return;
+                }
+
+                var to = appt.User?.Email;
+                if (string.IsNullOrWhiteSpace(to))
+                {
+                    _logger.LogWarning("No customer email found for Appointment {AppointmentId}.", entityId);
+                    return;
+                }
+
+                var normalized = (newStatus ?? string.Empty).Trim().ToLowerInvariant();
+
+                // Completed emails (existing behavior)
+                if (normalized == "completed")
+                {
+                    var subjectCompleted = $"Completed: Your {(appt.Type == Models.Entities.Type.Service ? "service" : "modification")} appointment (#{appt.AppointmentId})";
+                    var bodyCompleted = BuildCompletionBody(appt);
+                    await SendEmailAsync(to, subjectCompleted, bodyCompleted, isHtml: true);
+                    _logger.LogInformation("Completion email sent to {Email} for Appointment {AppointmentId}.", to, entityId);
+                    return;
+                }
+
+                // Handle approvals/rejections for Modification requests
+                var isModification = appt.Type == Models.Entities.Type.Modifications;
+                var isApproved = normalized == "approved" || normalized == "upcoming"; // Upcoming maps to Approved
+                var isRejected = normalized == "rejected";
+
+                if (isModification && (isApproved || isRejected))
+                {
+                    var subject = isApproved
+                        ? $"Approved: Your modification request (#{appt.AppointmentId})"
+                        : $"Rejected: Your modification request (#{appt.AppointmentId})";
+
+                    var body = BuildModificationDecisionBody(appt, isApproved);
+                    await SendEmailAsync(to, subject, body, isHtml: true);
+                    _logger.LogInformation("Decision email ({Status}) sent to {Email} for Appointment {AppointmentId}.", isApproved ? "Approved" : "Rejected", to, entityId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed sending status update email for Appointment {AppointmentId}.", entityId);
+            }
         }
 
         public async Task SendRealTimeUpdateAsync(string userId, object payload)
         {
-            // TODO: Logic to push a message via SignalR/WebSockets
-            // Example: await _hubContext.Clients.User(userId).SendAsync("ReceiveUpdate", payload);
             await Task.CompletedTask;
+        }
+
+        private static string BuildCompletionBody(Models.Entities.Appointment appt)
+        {
+            var services = appt.AppointmentServices?
+                .Select(s => s.Service?.ServiceName)
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .ToList() ?? new();
+
+            var vehicle = $"{WebUtility.HtmlEncode(appt.CustomerVehicle?.Brand)} {WebUtility.HtmlEncode(appt.CustomerVehicle?.Model)} ({WebUtility.HtmlEncode(appt.CustomerVehicle?.RegistrationNumber)})";
+            var serviceList = services.Count > 0 ? string.Join(", ", services) : "N/A";
+
+            var sb = new StringBuilder();
+            sb.Append($@"<div style=""font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#222"">
+<h2>Appointment Completed</h2>
+<p>Hi {WebUtility.HtmlEncode(appt.User?.FirstName ?? "Customer")},</p>
+<p>Your {(appt.Type == Models.Entities.Type.Service ? "service" : "modification")} appointment has been completed.</p>
+<ul>
+  <li><strong>Appointment #:</strong> {appt.AppointmentId}</li>
+  <li><strong>Date/Time:</strong> {appt.DateTime:yyyy-MM-dd HH:mm}</li>
+  <li><strong>Vehicle:</strong> {vehicle}</li>
+  <li><strong>Services:</strong> {WebUtility.HtmlEncode(serviceList)}</li>
+  <li><strong>Amount:</strong> LKR {appt.Amount:N2}</li>
+</ul>
+<p>If payment is pending, you can complete it from your dashboard.</p>
+<p>Thank you for choosing AutoServe 360.</p>
+</div>");
+            return sb.ToString();
+        }
+
+        private static string BuildModificationDecisionBody(Models.Entities.Appointment appt, bool approved)
+        {
+            var vehicle = $"{WebUtility.HtmlEncode(appt.CustomerVehicle?.Brand)} {WebUtility.HtmlEncode(appt.CustomerVehicle?.Model)} ({WebUtility.HtmlEncode(appt.CustomerVehicle?.RegistrationNumber)})";
+
+            var statusText = approved ? "approved" : "rejected";
+            var headline = approved ? "Modification Request Approved" : "Modification Request Rejected";
+            var nextStep = approved
+                ? "We have scheduled your modification. You can view details and track progress from your dashboard."
+                : "If you have questions or would like to modify your request, please contact support or submit a new request.";
+
+            var sb = new StringBuilder();
+            sb.Append($@"<div style=""font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#222"">
+<h2>{headline}</h2>
+<p>Hi {WebUtility.HtmlEncode(appt.User?.FirstName ?? "Customer")},</p>
+<p>Your modification request has been <strong>{statusText}</strong>.</p>
+<ul>
+  <li><strong>Appointment #:</strong> {appt.AppointmentId}</li>
+  <li><strong>Date/Time:</strong> {appt.DateTime:yyyy-MM-dd HH:mm}</li>
+  <li><strong>Vehicle:</strong> {vehicle}</li>
+  <li><strong>Current Amount:</strong> LKR {appt.Amount:N2}</li>
+</ul>
+<p>{nextStep}</p>
+<p>Thank you for choosing AutoServe 360.</p>
+</div>");
+            return sb.ToString();
+        }
+
+        private async Task SendEmailAsync(string to, string subject, string body, bool isHtml)
+        {
+            var host = _configuration["Smtp:Host"];
+            var port = int.TryParse(_configuration["Smtp:Port"], out var p) ? p : 587;
+            var user = _configuration["Smtp:Username"];
+            var pass = _configuration["Smtp:Password"];
+            var fromEmail = _configuration["Smtp:FromEmail"] ?? user;
+            var fromName = _configuration["Smtp:FromName"] ?? "AutoServe 360";
+            var enableSsl = bool.TryParse(_configuration["Smtp:EnableSsl"], out var ssl) ? ssl : true;
+
+            if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass))
+            {
+                _logger.LogWarning("SMTP settings missing. Email to {Recipient} not sent.", to);
+                return;
+            }
+
+            using var message = new MailMessage
+            {
+                From = new MailAddress(fromEmail!, fromName),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = isHtml
+            };
+            message.To.Add(new MailAddress(to));
+
+            using var client = new SmtpClient(host, port)
+            {
+                EnableSsl = enableSsl,
+                Credentials = new NetworkCredential(user, pass),
+                DeliveryMethod = SmtpDeliveryMethod.Network
+            };
+
+            await client.SendMailAsync(message);
         }
     }
 }
