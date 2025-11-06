@@ -18,6 +18,9 @@ appsettings.json
 # Your specific secrets
 firebase-service-account.json
 
+# macOS system file
+.DS_Store
+
 
 
 # EF Core Migrations (optional, if you regenerate them)
