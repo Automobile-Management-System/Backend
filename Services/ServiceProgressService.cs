@@ -29,8 +29,8 @@ namespace automobile_backend.Services
                 var serviceProgress = new ServiceProgressDto
                 {
                     AppointmentId = appointment.AppointmentId,
-                    ServiceTitle = GetServiceTitle(appointment),
                     CustomerName = appointment.User?.FirstName + " " + appointment.User?.LastName,
+                    CustomerVehicleName = appointment.CustomerVehicle?.Brand + " " + appointment.CustomerVehicle?.Model,
                     Status = appointment.Status,
                     ServiceType = appointment.Type,
                     AppointmentDateTime = appointment.DateTime,
@@ -47,6 +47,23 @@ namespace automobile_backend.Services
                     }).ToList() ?? new List<TimeLogDto>()
                 };
 
+                // Add specific service/modification details
+                if (appointment.Type == automobile_backend.Models.Entities.Type.Service)
+                {
+                    serviceProgress.ServiceNames = appointment.AppointmentServices?
+                        .Select(asv => asv.Service.ServiceName)
+                        .ToList() ?? new List<string>();
+                }
+                else if (appointment.Type == automobile_backend.Models.Entities.Type.Modifications)
+                {
+                    var modification = appointment.ModificationRequests?.FirstOrDefault();
+                    if (modification != null)
+                    {
+                        serviceProgress.ModificationTitle = modification.Title;
+                        serviceProgress.ModificationDescription = modification.Description;
+                    }
+                }
+
                 serviceProgressList.Add(serviceProgress);
             }
 
@@ -61,11 +78,11 @@ namespace automobile_backend.Services
             var activeTimer = appointment.TimeLogs?.FirstOrDefault(tl => tl.IsActive);
             var totalTime = await GetTotalLoggedTimeAsync(appointmentId);
 
-            return new ServiceProgressDto
+            var serviceProgress = new ServiceProgressDto
             {
                 AppointmentId = appointment.AppointmentId,
-                ServiceTitle = GetServiceTitle(appointment),
                 CustomerName = appointment.User?.FirstName + " " + appointment.User?.LastName,
+                CustomerVehicleName = appointment.CustomerVehicle?.Brand + " " + appointment.CustomerVehicle?.Model,
                 Status = appointment.Status,
                 ServiceType = appointment.Type,
                 AppointmentDateTime = appointment.DateTime,
@@ -81,32 +98,37 @@ namespace automobile_backend.Services
                     IsActive = tl.IsActive
                 }).ToList() ?? new List<TimeLogDto>()
             };
+
+            // Add specific service/modification details
+            if (appointment.Type == automobile_backend.Models.Entities.Type.Service)
+            {
+                serviceProgress.ServiceNames = appointment.AppointmentServices?
+                    .Select(asv => asv.Service.ServiceName)
+                    .ToList() ?? new List<string>();
+            }
+            else if (appointment.Type == automobile_backend.Models.Entities.Type.Modifications)
+            {
+                var modification = appointment.ModificationRequests?.FirstOrDefault();
+                if (modification != null)
+                {
+                    serviceProgress.ModificationTitle = modification.Title;
+                    serviceProgress.ModificationDescription = modification.Description;
+                }
+            }
+
+            return serviceProgress;
         }
 
         public async Task<TimerResponseDto> StartTimerAsync(TimerActionDto timerAction)
         {
             try
             {
-                // Check if there's already an active timer
                 var existingTimer = await _repository.GetActiveTimerAsync(timerAction.AppointmentId, timerAction.UserId);
                 if (existingTimer != null)
                 {
-                    return new TimerResponseDto
-                    {
-                        Success = false,
-                        Message = "Timer is already running for this appointment.",
-                        ActiveTimeLog = new TimeLogDto
-                        {
-                            LogId = existingTimer.LogId,
-                            StartDateTime = existingTimer.StartDateTime,
-                            EndDateTime = existingTimer.EndDateTime,
-                            HoursLogged = existingTimer.HoursLogged,
-                            IsActive = existingTimer.IsActive
-                        }
-                    };
+                    return new TimerResponseDto { Success = false, Message = "Timer is already running for this appointment." };
                 }
 
-                // Requirement 2: If starting timer, move status from Upcoming to InProgress
                 var appointment = await _repository.GetAppointmentWithDetailsAsync(timerAction.AppointmentId);
                 if (appointment == null)
                 {
@@ -116,14 +138,13 @@ namespace automobile_backend.Services
                 if (appointment.Status == AppointmentStatus.Upcoming)
                 {
                     appointment.Status = AppointmentStatus.InProgress;
-                    if (appointment.StartDateTime == default) // Set start time if not already set
+                    if (appointment.StartDateTime == default)
                     {
                         appointment.StartDateTime = DateTime.UtcNow;
                     }
                     await _repository.UpdateAppointmentAsync(appointment);
                 }
 
-                // Create new time log with active timer
                 var timeLog = new TimeLog
                 {
                     AppointmentId = timerAction.AppointmentId,
@@ -153,11 +174,7 @@ namespace automobile_backend.Services
             }
             catch (Exception ex)
             {
-                return new TimerResponseDto
-                {
-                    Success = false,
-                    Message = $"Error starting timer: {ex.Message}"
-                };
+                return new TimerResponseDto { Success = false, Message = $"Error starting timer: {ex.Message}" };
             }
         }
 
@@ -168,14 +185,9 @@ namespace automobile_backend.Services
                 var activeTimer = await _repository.GetActiveTimerAsync(timerAction.AppointmentId, timerAction.UserId);
                 if (activeTimer == null)
                 {
-                    return new TimerResponseDto
-                    {
-                        Success = false,
-                        Message = "No active timer found for this appointment."
-                    };
+                    return new TimerResponseDto { Success = false, Message = "No active timer found for this appointment." };
                 }
 
-                // Calculate hours logged
                 var timeElapsed = DateTime.UtcNow - activeTimer.StartDateTime;
                 activeTimer.EndDateTime = DateTime.UtcNow;
                 activeTimer.HoursLogged = (decimal)timeElapsed.TotalHours;
@@ -201,11 +213,7 @@ namespace automobile_backend.Services
             }
             catch (Exception ex)
             {
-                return new TimerResponseDto
-                {
-                    Success = false,
-                    Message = $"Error pausing timer: {ex.Message}"
-                };
+                return new TimerResponseDto { Success = false, Message = $"Error pausing timer: {ex.Message}" };
             }
         }
 
@@ -216,14 +224,9 @@ namespace automobile_backend.Services
                 var activeTimer = await _repository.GetActiveTimerAsync(timerAction.AppointmentId, timerAction.UserId);
                 if (activeTimer == null)
                 {
-                    return new TimerResponseDto
-                    {
-                        Success = false,
-                        Message = "No active timer found for this appointment."
-                    };
+                    return new TimerResponseDto { Success = false, Message = "No active timer found for this appointment." };
                 }
 
-                // Calculate hours logged and stop timer
                 var timeElapsed = DateTime.UtcNow - activeTimer.StartDateTime;
                 activeTimer.EndDateTime = DateTime.UtcNow;
                 activeTimer.HoursLogged = (decimal)timeElapsed.TotalHours;
@@ -231,15 +234,12 @@ namespace automobile_backend.Services
 
                 await _repository.UpdateTimeLogAsync(activeTimer);
 
-                // Update appointment status to completed if stopping timer
                 var appointment = await _repository.GetAppointmentWithDetailsAsync(timerAction.AppointmentId);
                 if (appointment != null)
                 {
                     appointment.Status = AppointmentStatus.Completed;
                     appointment.EndDateTime = DateTime.UtcNow;
                     await _repository.UpdateAppointmentAsync(appointment);
-
-                    // Requirement 3: Create payment record
                     await CreatePaymentRecordAsync(appointment);
                 }
 
@@ -262,11 +262,7 @@ namespace automobile_backend.Services
             }
             catch (Exception ex)
             {
-                return new TimerResponseDto
-                {
-                    Success = false,
-                    Message = $"Error stopping timer: {ex.Message}"
-                };
+                return new TimerResponseDto { Success = false, Message = $"Error stopping timer: {ex.Message}" };
             }
         }
 
@@ -279,18 +275,15 @@ namespace automobile_backend.Services
 
                 appointment.Status = updateStatus.NewStatus;
 
-                // If setting to InProgress, set start time
                 if (updateStatus.NewStatus == AppointmentStatus.InProgress && appointment.StartDateTime == default)
                 {
                     appointment.StartDateTime = DateTime.UtcNow;
                 }
 
-                // If setting to Completed, set end time
                 if (updateStatus.NewStatus == AppointmentStatus.Completed)
                 {
                     appointment.EndDateTime = DateTime.UtcNow;
 
-                    // Stop any active timers
                     var activeTimer = await _repository.GetActiveTimerAsync(updateStatus.AppointmentId, updateStatus.UserId);
                     if (activeTimer != null)
                     {
@@ -301,7 +294,6 @@ namespace automobile_backend.Services
                         await _repository.UpdateTimeLogAsync(activeTimer);
                     }
 
-                    // Requirement 4: Create payment record
                     await CreatePaymentRecordAsync(appointment);
                 }
 
@@ -334,33 +326,26 @@ namespace automobile_backend.Services
             return await _repository.GetTotalLoggedTimeAsync(appointmentId);
         }
 
-        private string GetServiceTitle(Appointment appointment)
-        {
-            var serviceType = appointment.Type == automobile_backend.Models.Entities.Type.Service ? "Service" : "Modifications";
-            var vehicleInfo = appointment.CustomerVehicle?.Brand + " " + appointment.CustomerVehicle?.Model;
-            return $"{serviceType} - {vehicleInfo}";
-        }
+        // This private method is no longer needed as the logic is in the main methods
+        // private string GetServiceTitle(Appointment appointment) { ... }
 
         private async Task CreatePaymentRecordAsync(Appointment appointment)
         {
             try
             {
-                // Check if payment already exists for this appointment
                 var existingPayment = await _paymentRepository.GetByAppointmentIdAsync(appointment.AppointmentId);
                 if (existingPayment != null)
                 {
-                    // Payment already exists, skip creation
                     return;
                 }
 
-                // Requirement 3 & 4: Create new payment record
                 var payment = new Payment
                 {
                     AppointmentId = appointment.AppointmentId,
                     Amount = appointment.Amount,
-                    Status = PaymentStatus.Pending, // Status 0 (Pending)
-                    PaymentMethod = PaymentMethod.CreditCard, // Requirement: Use 0, which is CreditCard
-                    PaymentDateTime = appointment.DateTime, // Requirement: Use Appointment.date
+                    Status = PaymentStatus.Pending,
+                    PaymentMethod = PaymentMethod.CreditCard,
+                    PaymentDateTime = appointment.DateTime,
                     InvoiceLink = null
                 };
 
@@ -368,7 +353,6 @@ namespace automobile_backend.Services
             }
             catch (Exception ex)
             {
-                // Log the error but don't throw - payment creation failure shouldn't break appointment completion
                 Console.WriteLine($"Error creating payment record: {ex.Message}");
             }
         }

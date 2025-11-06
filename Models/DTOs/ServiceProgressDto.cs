@@ -5,8 +5,8 @@ namespace automobile_backend.Models.DTOs
     public class ServiceProgressDto
     {
         public int AppointmentId { get; set; }
-        public string ServiceTitle { get; set; }
         public string CustomerName { get; set; }
+        public string CustomerVehicleName { get; set; } // Added
         public AppointmentStatus Status { get; set; }
         public automobile_backend.Models.Entities.Type ServiceType { get; set; }
         public DateTime AppointmentDateTime { get; set; }
@@ -14,6 +14,11 @@ namespace automobile_backend.Models.DTOs
         public DateTime? CurrentTimerStartTime { get; set; }
         public decimal TotalTimeLogged { get; set; } // in hours
         public List<TimeLogDto> TimeLogs { get; set; } = new List<TimeLogDto>();
+
+        // Replaced ServiceTitle with specific fields
+        public List<string> ServiceNames { get; set; } = new List<string>();
+        public string? ModificationTitle { get; set; }
+        public string? ModificationDescription { get; set; }
     }
 
     public class TimeLogDto
