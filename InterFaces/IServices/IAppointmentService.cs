@@ -1,3 +1,4 @@
+using automobile_backend.Models.DTO;
 using automobile_backend.Models.DTOs;
 using automobile_backend.Models.Entities;
 using System;
@@ -12,5 +13,10 @@ namespace automobile_backend.InterFaces.IServices
         Task<Appointment> CreateAppointmentAsync(int userId, CreateServiceAppointmentDto dto);
         Task<IEnumerable<SlotAvailabilityDto>> GetSlotAvailabilityAsync(DateTime date);
         Task<IReadOnlyList<VehicleOptionDto>> GetUserVehicleOptionsAsync(int userId);
+        Task<PaginatedResponse<Appointment>> GetPaginatedAppointmentsAsync(
+            int userId, int pageNumber, int pageSize, AppointmentStatus? status);
+
+
+
     }
 }

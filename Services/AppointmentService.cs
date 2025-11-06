@@ -1,5 +1,6 @@
 ﻿using automobile_backend.InterFaces.IRepository;
 using automobile_backend.InterFaces.IServices;
+using automobile_backend.Models.DTO;
 using automobile_backend.Models.DTOs;
 using automobile_backend.Models.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -147,5 +148,14 @@ namespace automobile_backend.Services
                 _ => throw new ArgumentOutOfRangeException(nameof(slot), "Unsupported time slot.")
             };
         }
+
+        public async Task<PaginatedResponse<Appointment>> GetPaginatedAppointmentsAsync(
+    int userId, int pageNumber, int pageSize, AppointmentStatus? status)
+        {
+            return await _appointmentRepository
+                .GetPaginatedAsync(userId, pageNumber, pageSize, status);
+        }
+
+
     }
 }
