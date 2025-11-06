@@ -13,11 +13,10 @@ namespace automobile_backend.InterFaces.IServices
         Task<Appointment> CreateAppointmentAsync(int userId, CreateServiceAppointmentDto dto);
         Task<IEnumerable<SlotAvailabilityDto>> GetSlotAvailabilityAsync(DateTime date);
         Task<IReadOnlyList<VehicleOptionDto>> GetUserVehicleOptionsAsync(int userId);
+        Task<PaginatedResponse<Appointment>> GetPaginatedAppointmentsAsync(
+            int userId, int pageNumber, int pageSize, AppointmentStatus? status);
 
-       Task<PaginatedResponse<Appointment>> GetAppointmentsPaginatedAsync(
-    int pageNumber,
-    int pageSize,
-    AppointmentStatus? status);
+
 
     }
 }

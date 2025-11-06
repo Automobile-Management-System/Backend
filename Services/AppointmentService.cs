@@ -149,41 +149,13 @@ namespace automobile_backend.Services
             };
         }
 
-        public async Task<PaginatedResponse<Appointment>> GetAppointmentsPaginatedAsync(
-    int pageNumber,
-    int pageSize,
-    AppointmentStatus? status)
+        public async Task<PaginatedResponse<Appointment>> GetPaginatedAppointmentsAsync(
+    int userId, int pageNumber, int pageSize, AppointmentStatus? status)
         {
-            var query = _context.Appointments
-                .Include(a => a.User)
-                .Include(a => a.CustomerVehicle)
-                .Include(a => a.AppointmentServices)
-                    .ThenInclude(aps => aps.Service)
-                .AsQueryable();
-
-            // ✅ Filter by status if provided
-            if (status.HasValue)
-            {
-                query = query.Where(a => a.Status == status.Value);
-            }
-
-            var totalCount = await query.CountAsync();
-
-            // ✅ Pagination
-            var appointments = await query
-                .OrderByDescending(a => a.DateTime)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return new PaginatedResponse<Appointment>
-            {
-                Data = appointments,
-                TotalCount = totalCount,
-                PageNumber = pageNumber,
-                PageSize = pageSize
-            };
+            return await _appointmentRepository
+                .GetPaginatedAsync(userId, pageNumber, pageSize, status);
         }
+
 
     }
 }

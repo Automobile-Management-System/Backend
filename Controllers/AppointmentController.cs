@@ -1,4 +1,5 @@
 using automobile_backend.InterFaces.IServices;
+using automobile_backend.Models.DTO;
 using automobile_backend.Models.DTOs;
 using automobile_backend.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -129,20 +130,49 @@ namespace automobile_backend.Controllers
             }
         }
 
-        [HttpGet("all")]
-        public async Task<IActionResult> GetAppointmentsPaginated(
-    [FromQuery] int pageNumber = 1,
-    [FromQuery] int pageSize = 10,
-    [FromQuery] AppointmentStatus? status = null)
+        [HttpGet("fliter")]
+        [Authorize]
+        public async Task<IActionResult> GetPaginated(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] AppointmentStatus? status = null)
         {
-            var result = await _appointmentService.GetAppointmentsPaginatedAsync(
-                pageNumber,
-                pageSize,
-                status
-            );
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("userId");
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { message = "User ID not found in token." });
+            }
 
-            return Ok(result);
+            var result = await _appointmentService
+                .GetPaginatedAppointmentsAsync(userId, pageNumber, pageSize, status);
+
+            var appointmentDtos = result.Data.Select(a => new AppointmentResponseDto
+            {
+                AppointmentId = a.AppointmentId,
+                DateTime = a.DateTime,
+                Status = a.Status,
+                UserId = a.UserId,
+                UserName = a.User != null ? $"{a.User.FirstName} {a.User.LastName}" : "Unknown",
+                VehicleId = a.VehicleId,
+                RegistrationNumber = a.CustomerVehicle?.RegistrationNumber ?? "",
+                Services = a.AppointmentServices?.Select(aps => new automobile_backend.Models.DTOs.ServiceDto
+                {
+                    ServiceName = aps.Service.ServiceName,
+                    BasePrice = aps.Service.BasePrice
+                }).ToList() ?? new List<automobile_backend.Models.DTOs.ServiceDto>()
+            }).ToList();
+
+            return Ok(new PaginatedResponse<AppointmentResponseDto>
+            {
+                Data = appointmentDtos,
+                TotalCount = result.TotalCount,
+                PageNumber = result.PageNumber,
+                PageSize = result.PageSize
+            });
         }
+
+
+
 
     }
 }
