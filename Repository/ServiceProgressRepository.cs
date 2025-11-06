@@ -21,7 +21,10 @@ namespace automobile_backend.Repository
                 .Include(a => a.TimeLogs)
                 .Include(a => a.EmployeeAppointments)
                 .Where(a => a.EmployeeAppointments.Any(ea => ea.UserId == employeeId))
-                .Where(a => a.Status == AppointmentStatus.Upcoming)
+                // Requirement 1: Show Upcoming, InProgress, and Completed. Exclude Pending (0) and Rejected (4).
+                .Where(a => a.Status == AppointmentStatus.Upcoming ||
+                            a.Status == AppointmentStatus.InProgress ||
+                            a.Status == AppointmentStatus.Completed)
                 .OrderBy(a => a.DateTime)
                 .ToListAsync();
         }
@@ -40,8 +43,8 @@ namespace automobile_backend.Repository
         {
             return await _context.TimeLogs
                 .FirstOrDefaultAsync(tl => tl.AppointmentId == appointmentId
-                                          && tl.UserId == userId
-                                          && tl.IsActive);
+                                         && tl.UserId == userId
+                                         && tl.IsActive);
         }
 
         public async Task<IEnumerable<TimeLog>> GetTimeLogsByAppointmentAsync(int appointmentId)
