@@ -1,12 +1,13 @@
 using automobile_backend.InterFaces.IServices;
 using automobile_backend.Models.DTOs;
+using automobile_backend.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using System.Linq;
-using System.Collections.Generic;
-using System.Security.Claims;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace automobile_backend.Controllers
 {
@@ -127,5 +128,21 @@ namespace automobile_backend.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAppointmentsPaginated(
+    [FromQuery] int pageNumber = 1,
+    [FromQuery] int pageSize = 10,
+    [FromQuery] AppointmentStatus? status = null)
+        {
+            var result = await _appointmentService.GetAppointmentsPaginatedAsync(
+                pageNumber,
+                pageSize,
+                status
+            );
+
+            return Ok(result);
+        }
+
     }
 }
