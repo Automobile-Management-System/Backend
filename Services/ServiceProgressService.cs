@@ -87,7 +87,7 @@ namespace automobile_backend.Services
         {
             try
             {
-                // Check if there's already an active timer for this appointment and user
+                // Check if there's already an active timer
                 var existingTimer = await _repository.GetActiveTimerAsync(timerAction.AppointmentId, timerAction.UserId);
                 if (existingTimer != null)
                 {
@@ -104,6 +104,23 @@ namespace automobile_backend.Services
                             IsActive = existingTimer.IsActive
                         }
                     };
+                }
+
+                // Requirement 2: If starting timer, move status from Upcoming to InProgress
+                var appointment = await _repository.GetAppointmentWithDetailsAsync(timerAction.AppointmentId);
+                if (appointment == null)
+                {
+                    return new TimerResponseDto { Success = false, Message = "Appointment not found." };
+                }
+
+                if (appointment.Status == AppointmentStatus.Upcoming)
+                {
+                    appointment.Status = AppointmentStatus.InProgress;
+                    if (appointment.StartDateTime == default) // Set start time if not already set
+                    {
+                        appointment.StartDateTime = DateTime.UtcNow;
+                    }
+                    await _repository.UpdateAppointmentAsync(appointment);
                 }
 
                 // Create new time log with active timer
@@ -222,7 +239,7 @@ namespace automobile_backend.Services
                     appointment.EndDateTime = DateTime.UtcNow;
                     await _repository.UpdateAppointmentAsync(appointment);
 
-                    // Create payment record for completed appointment
+                    // Requirement 3: Create payment record
                     await CreatePaymentRecordAsync(appointment);
                 }
 
@@ -284,7 +301,7 @@ namespace automobile_backend.Services
                         await _repository.UpdateTimeLogAsync(activeTimer);
                     }
 
-                    // Create payment record for completed appointment
+                    // Requirement 4: Create payment record
                     await CreatePaymentRecordAsync(appointment);
                 }
 
@@ -336,14 +353,15 @@ namespace automobile_backend.Services
                     return;
                 }
 
-                // Create new payment record with status 0 (Pending)
+                // Requirement 3 & 4: Create new payment record
                 var payment = new Payment
                 {
                     AppointmentId = appointment.AppointmentId,
                     Amount = appointment.Amount,
-                    Status = PaymentStatus.Pending, // Status 0
-                    PaymentMethod = PaymentMethod.Cash, // Default payment method
-                    PaymentDateTime = DateTime.UtcNow
+                    Status = PaymentStatus.Pending, // Status 0 (Pending)
+                    PaymentMethod = PaymentMethod.CreditCard, // Requirement: Use 0, which is CreditCard
+                    PaymentDateTime = appointment.DateTime, // Requirement: Use Appointment.date
+                    InvoiceLink = null
                 };
 
                 await _paymentRepository.CreateAsync(payment);
@@ -351,7 +369,6 @@ namespace automobile_backend.Services
             catch (Exception ex)
             {
                 // Log the error but don't throw - payment creation failure shouldn't break appointment completion
-                // In a real application, you would log this to a logging service
                 Console.WriteLine($"Error creating payment record: {ex.Message}");
             }
         }
