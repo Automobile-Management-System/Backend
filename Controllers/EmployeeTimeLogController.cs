@@ -17,42 +17,22 @@ namespace automobile_backend.Controllers
             _timeLogService = timeLogService;
         }
 
-        [HttpGet("my-logs")]
-        public async Task<IActionResult> GetMyTimeLogs(
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? search = null,
-            [FromQuery] DateTime? startDate = null,
-            [FromQuery] DateTime? endDate = null)
+        [HttpGet("history")]
+        public async Task<IActionResult> GetEmployeeTimeLogHistory(
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? search = "")
         {
-            try
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userIdClaim))
-                    return Unauthorized(new { message = "User not authenticated" });
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-                int userId = int.Parse(userIdClaim);
-                var response = await _timeLogService.GetEmployeeTimeLogsAsync(userId, pageNumber, pageSize, search, startDate, endDate);
+            var result = await _timeLogService.GetEmployeeLogsAsync(
+                userId,
+                pageNumber,
+                pageSize,
+                search
+            );
 
-                return Ok(new
-                {
-                    success = true,
-                    pagination = new
-                    {
-                        response.TotalCount,
-                        response.PageNumber,
-                        response.PageSize,
-                        response.TotalPages,
-                        response.HasNextPage,
-                        response.HasPreviousPage
-                    },
-                    data = response.Data
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, error = ex.Message });
-            }
+            return Ok(result);
         }
     }
 }

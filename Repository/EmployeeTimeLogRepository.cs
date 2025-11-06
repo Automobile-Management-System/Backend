@@ -1,4 +1,5 @@
 ﻿using automobile_backend.InterFaces.IRepository;
+using automobile_backend.Models.DTO;
 using automobile_backend.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,49 +14,70 @@ namespace automobile_backend.Repository
             _context = context;
         }
 
-        public async Task<(List<TimeLog> logs, int totalCount)> GetEmployeeTimeLogsAsync(
-            int userId,
+        public async Task<PaginatedResponse<EmployeeTimeLogDTO>> GetEmployeeLogsAsync(
+            int employeeId,
             int pageNumber,
             int pageSize,
-            string? search,
-            DateTime? startDate,
-            DateTime? endDate)
+            string? search)
         {
             var query = _context.TimeLogs
+                .Where(t => t.UserId == employeeId && t.EndDateTime != null)
                 .Include(t => t.Appointment)
                     .ThenInclude(a => a.User)
                 .Include(t => t.Appointment)
-                    .ThenInclude(a => a.AppointmentServices)
-                        .ThenInclude(aps => aps.Service)
-                .Include(t => t.Appointment)
-                    .ThenInclude(a => a.ModificationRequests)
-                .Where(t => t.UserId == userId)
+                    .ThenInclude(a => a.CustomerVehicle)
+                .Include(t => t.Appointment.AppointmentServices)
+                    .ThenInclude(aps => aps.Service)
+                .Include(t => t.Appointment.ModificationRequests)
                 .AsQueryable();
 
-            // 🔍 Apply search filter (customer name)
+            // ✅ Search filter (customer name, vehicle reg, service name, modification title)
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var lowerSearch = search.ToLower();
+                string s = search.ToLower();
                 query = query.Where(t =>
-                    (t.Appointment.User.FirstName + " " + t.Appointment.User.LastName).ToLower().Contains(lowerSearch));
+                    t.Appointment.User.FirstName.ToLower().Contains(s) ||
+                    t.Appointment.User.LastName.ToLower().Contains(s) ||
+                    t.Appointment.CustomerVehicle.RegistrationNumber.ToLower().Contains(s) ||
+                    t.Appointment.AppointmentServices.Any(aps => aps.Service.ServiceName.ToLower().Contains(s)) ||
+                    t.Appointment.ModificationRequests.Any(m => m.Title.ToLower().Contains(s))
+                );
             }
-
-            // 📅 Apply date range filter
-            if (startDate.HasValue)
-                query = query.Where(t => t.StartDateTime.Date >= startDate.Value.Date);
-
-            if (endDate.HasValue)
-                query = query.Where(t => t.EndDateTime.HasValue && t.EndDateTime.Value.Date <= endDate.Value.Date);
 
             var totalCount = await query.CountAsync();
 
             var logs = await query
-                .OrderByDescending(t => t.StartDateTime)
+                .OrderByDescending(t => t.CreatedAt)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+                .Select(t => new EmployeeTimeLogDTO
+                {
+                    LogId = t.LogId,
+                    CustomerName = t.Appointment.User.FirstName + " " + t.Appointment.User.LastName,
+                    VehicleRegNumber = t.Appointment.CustomerVehicle.RegistrationNumber,
+                    StartDateTime = t.StartDateTime,
+                    EndDateTime = t.EndDateTime,
+                    HoursLogged = t.HoursLogged,
+                    CompletedServices = t.Appointment.Status == AppointmentStatus.Completed
+                    ? t.Appointment.AppointmentServices
+                        .Select(aps => aps.Service.ServiceName)
+                        .ToList()
+                        : null,
+                    CompletedModifications = t.Appointment.Status == AppointmentStatus.Completed
+    ? t.Appointment.ModificationRequests
+        .Select(m => m.Title)
+        .ToList()
+    : null
+                })
                 .ToListAsync();
 
-            return (logs, totalCount);
+            return new PaginatedResponse<EmployeeTimeLogDTO>
+            {
+                Data = logs,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
     }
 }

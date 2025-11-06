@@ -1,15 +1,14 @@
-﻿using automobile_backend.Models.Entities;
+﻿using automobile_backend.Models.DTO;
 
 namespace automobile_backend.InterFaces.IRepository
 {
     public interface IEmployeeTimeLogRepository
     {
-        Task<(List<TimeLog> logs, int totalCount)> GetEmployeeTimeLogsAsync(
-            int userId,
+        Task<PaginatedResponse<EmployeeTimeLogDTO>> GetEmployeeLogsAsync(
+            int employeeId,
             int pageNumber,
             int pageSize,
-            string? search,
-            DateTime? startDate,
-            DateTime? endDate);
+            string? search
+        );
     }
 }
