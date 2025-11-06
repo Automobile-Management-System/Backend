@@ -20,8 +20,10 @@ namespace automobile_backend.Repository
                 .Include(a => a.CustomerVehicle)
                 .Include(a => a.TimeLogs)
                 .Include(a => a.EmployeeAppointments)
+                .Include(a => a.AppointmentServices) // Added
+                    .ThenInclude(asv => asv.Service)  // Added
+                .Include(a => a.ModificationRequests) // Added
                 .Where(a => a.EmployeeAppointments.Any(ea => ea.UserId == employeeId))
-                // Requirement 1: Show Upcoming, InProgress, and Completed. Exclude Pending (0) and Rejected (4).
                 .Where(a => a.Status == AppointmentStatus.Upcoming ||
                             a.Status == AppointmentStatus.InProgress ||
                             a.Status == AppointmentStatus.Completed)
@@ -35,7 +37,10 @@ namespace automobile_backend.Repository
                 .Include(a => a.User)
                 .Include(a => a.CustomerVehicle)
                 .Include(a => a.TimeLogs.OrderBy(tl => tl.StartDateTime))
-                .ThenInclude(tl => tl.User)
+                    .ThenInclude(tl => tl.User)
+                .Include(a => a.AppointmentServices) // Added
+                    .ThenInclude(asv => asv.Service)  // Added
+                .Include(a => a.ModificationRequests) // Added
                 .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId);
         }
 
