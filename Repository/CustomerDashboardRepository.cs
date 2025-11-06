@@ -68,6 +68,7 @@ namespace automobile_backend.Repositories
                 .Take(3)
                 .Select(a => new
                 {
+                    Status =a.Status.ToString(),
                     Date = a.DateTime,
                     Services = a.AppointmentServices
                         .Select(asv => asv.Service.ServiceName)
@@ -85,6 +86,7 @@ namespace automobile_backend.Repositories
                 .Take(3)
                 .Select(a => new
                 {
+                    Status = a.Status.ToString(),
                     Date = a.DateTime,
                     Modifications = a.ModificationRequests
                         .Select(m => m.Title)
