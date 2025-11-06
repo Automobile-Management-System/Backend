@@ -12,9 +12,9 @@ namespace automobile_backend.Services
             _repository = repository;
         }
 
-        public async Task<int> GetTodayUpcomingAppointmentCountAsync(int employeeId)
+        public async Task<int> GetUpcomingAppointmentCountAsync(int employeeId)
         {
-            return await _repository.GetTodayUpcomingAppointmentCountAsync(employeeId);
+            return await _repository.GetUpcomingAppointmentCountAsync(employeeId);
         }
 
         public async Task<int> GetInProgressAppointmentCountAsync(int employeeId)
@@ -22,14 +22,14 @@ namespace automobile_backend.Services
             return await _repository.GetInProgressAppointmentCountAsync(employeeId);
         }
 
-        public async Task<List<object>> GetTodayRecentServicesAsync(int employeeId)
+        public async Task<List<object>> GetRecentServicesAsync(int employeeId)
         {
-            return await _repository.GetTodayRecentServicesAsync(employeeId);
+            return await _repository.GetRecentServicesAsync(employeeId);
         }
 
-        public async Task<List<object>> GetTodayRecentModificationsAsync(int employeeId)
+        public async Task<List<object>> GetRecentModificationsAsync(int employeeId)
         {
-            return await _repository.GetTodayRecentModificationsAsync(employeeId);
+            return await _repository.GetRecentModificationsAsync(employeeId);
         }
 
         public async Task<int> GetCompletedServiceCountAsync(int employeeId)

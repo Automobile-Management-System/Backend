@@ -17,8 +17,8 @@ namespace automobile_backend.Controllers
             _employeeDashboardService = employeeDashboardService;
         }
 
-        [HttpGet("appointments/today/upcoming-count")]
-        public async Task<IActionResult> GetTodayUpcomingAppointmentsForLoggedEmployee()
+        [HttpGet("appointments/upcoming-count")]
+        public async Task<IActionResult> GetUpcomingAppointmentsForLoggedEmployee()
         {
            
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -29,12 +29,11 @@ namespace automobile_backend.Controllers
 
             int employeeId = int.Parse(userIdClaim);
 
-            var count = await _employeeDashboardService.GetTodayUpcomingAppointmentCountAsync(employeeId);
+            var count = await _employeeDashboardService.GetUpcomingAppointmentCountAsync(employeeId);
 
             return Ok(new
             {
                 EmployeeId = employeeId,
-                Date = DateTime.Today.ToString("yyyy-MM-dd"),
                 UpcomingAppointmentCount = count
             });
         }
@@ -103,8 +102,8 @@ namespace automobile_backend.Controllers
 
 
 
-        [HttpGet("appointments/today/recent-services")]
-        public async Task<IActionResult> GetTodayRecentServicesForLoggedEmployee()
+        [HttpGet("appointments/recent-services")]
+        public async Task<IActionResult> GetRecentServicesForLoggedEmployee()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
@@ -114,18 +113,17 @@ namespace automobile_backend.Controllers
 
             int employeeId = int.Parse(userIdClaim);
 
-            var recentServices = await _employeeDashboardService.GetTodayRecentServicesAsync(employeeId);
+            var recentServices = await _employeeDashboardService.GetRecentServicesAsync(employeeId);
 
             return Ok(new
             {
                 EmployeeId = employeeId,
-                Date = DateTime.Today.ToString("yyyy-MM-dd"),
                 RecentServices = recentServices
             });
         }
 
-        [HttpGet("appointments/today/recent-modifications")]
-        public async Task<IActionResult> GetTodayRecentModificationsForLoggedEmployee()
+        [HttpGet("appointments/recent-modifications")]
+        public async Task<IActionResult> GetRecentModificationsForLoggedEmployee()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim))
@@ -135,12 +133,11 @@ namespace automobile_backend.Controllers
 
             int employeeId = int.Parse(userIdClaim);
 
-            var recentModifications = await _employeeDashboardService.GetTodayRecentModificationsAsync(employeeId);
+            var recentModifications = await _employeeDashboardService.GetRecentModificationsAsync(employeeId);
 
             return Ok(new
             {
                 EmployeeId = employeeId,
-                Date = DateTime.Today.ToString("yyyy-MM-dd"),
                 RecentModifications = recentModifications
             });
         }
