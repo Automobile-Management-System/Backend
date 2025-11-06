@@ -13,7 +13,7 @@ namespace automobile_backend.Repository
             _context = context;
         }
 
-        public async Task<int> GetTodayUpcomingAppointmentCountAsync(int employeeId)
+        public async Task<int> GetUpcomingAppointmentCountAsync(int employeeId)
         {
             var today = DateTime.Today;
 
@@ -21,8 +21,7 @@ namespace automobile_backend.Repository
                 .Include(ea => ea.Appointment)
                 .Where(ea =>
                     ea.UserId == employeeId &&
-                    ea.Appointment.Status == AppointmentStatus.Upcoming &&
-                    ea.Appointment.DateTime.Date == today)
+                    ea.Appointment.Status == AppointmentStatus.Upcoming)
                 .CountAsync();
 
             return count;
@@ -40,17 +39,16 @@ namespace automobile_backend.Repository
             return count;
         }
 
-        public async Task<List<object>> GetTodayRecentServicesAsync(int employeeId)
+        public async Task<List<object>> GetRecentServicesAsync(int employeeId)
         {
-            var today = DateTime.Today;
+           
 
             var services = await _context.EmployeeAppointments
                 .Include(ea => ea.Appointment)
                     .ThenInclude(a => a.AppointmentServices)
                         .ThenInclude(aps => aps.Service)
                 .Where(ea =>
-                    ea.UserId == employeeId &&
-                    ea.Appointment.DateTime.Date == today)
+                    ea.UserId == employeeId)
                 .OrderByDescending(ea => ea.Appointment.DateTime)
                 .Take(5)
                 .SelectMany(ea => ea.Appointment.AppointmentServices.Select(aps => new
@@ -66,16 +64,15 @@ namespace automobile_backend.Repository
         }
 
 
-        public async Task<List<object>> GetTodayRecentModificationsAsync(int employeeId)
+        public async Task<List<object>> GetRecentModificationsAsync(int employeeId)
         {
-            var today = DateTime.Today;
+            
 
             var modifications = await _context.EmployeeAppointments
                 .Include(ea => ea.Appointment)
                     .ThenInclude(a => a.ModificationRequests)
                 .Where(ea =>
                     ea.UserId == employeeId &&
-                    ea.Appointment.DateTime.Date == today &&
                     ea.Appointment.ModificationRequests.Any())
                 .OrderByDescending(ea => ea.Appointment.DateTime)
                 .Take(5)
