@@ -19,21 +19,16 @@ namespace automobile_backend.Services
             _logger = logger;
         }
 
-        // Not used in your scenario, kept for interface compliance
         public async Task SendAppointmentReminderAsync(int appointmentId)
         {
             await Task.CompletedTask;
         }
 
-        // Called from your endpoint: SendStatusUpdateAsync("Appointment", id, "Completed")
         public async Task SendStatusUpdateAsync(string entityType, int entityId, string newStatus)
         {
             try
             {
                 if (!string.Equals(entityType, "Appointment", StringComparison.OrdinalIgnoreCase))
-                    return;
-
-                if (!string.Equals(newStatus, "Completed", StringComparison.OrdinalIgnoreCase))
                     return;
 
                 var appt = await _db.Appointments
@@ -55,15 +50,37 @@ namespace automobile_backend.Services
                     return;
                 }
 
-                var subject = $"Completed: Your {(appt.Type == Models.Entities.Type.Service ? "service" : "modification")} appointment (#{appt.AppointmentId})";
-                var body = BuildCompletionBody(appt);
+                var normalized = (newStatus ?? string.Empty).Trim().ToLowerInvariant();
 
-                await SendEmailAsync(to, subject, body, isHtml: true);
-                _logger.LogInformation("Completion email sent to {Email} for Appointment {AppointmentId}.", to, entityId);
+                // Completed emails (existing behavior)
+                if (normalized == "completed")
+                {
+                    var subjectCompleted = $"Completed: Your {(appt.Type == Models.Entities.Type.Service ? "service" : "modification")} appointment (#{appt.AppointmentId})";
+                    var bodyCompleted = BuildCompletionBody(appt);
+                    await SendEmailAsync(to, subjectCompleted, bodyCompleted, isHtml: true);
+                    _logger.LogInformation("Completion email sent to {Email} for Appointment {AppointmentId}.", to, entityId);
+                    return;
+                }
+
+                // Handle approvals/rejections for Modification requests
+                var isModification = appt.Type == Models.Entities.Type.Modifications;
+                var isApproved = normalized == "approved" || normalized == "upcoming"; // Upcoming maps to Approved
+                var isRejected = normalized == "rejected";
+
+                if (isModification && (isApproved || isRejected))
+                {
+                    var subject = isApproved
+                        ? $"Approved: Your modification request (#{appt.AppointmentId})"
+                        : $"Rejected: Your modification request (#{appt.AppointmentId})";
+
+                    var body = BuildModificationDecisionBody(appt, isApproved);
+                    await SendEmailAsync(to, subject, body, isHtml: true);
+                    _logger.LogInformation("Decision email ({Status}) sent to {Email} for Appointment {AppointmentId}.", isApproved ? "Approved" : "Rejected", to, entityId);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed sending completion email for Appointment {AppointmentId}.", entityId);
+                _logger.LogError(ex, "Failed sending status update email for Appointment {AppointmentId}.", entityId);
             }
         }
 
@@ -95,6 +112,33 @@ namespace automobile_backend.Services
   <li><strong>Amount:</strong> LKR {appt.Amount:N2}</li>
 </ul>
 <p>If payment is pending, you can complete it from your dashboard.</p>
+<p>Thank you for choosing AutoServe 360.</p>
+</div>");
+            return sb.ToString();
+        }
+
+        private static string BuildModificationDecisionBody(Models.Entities.Appointment appt, bool approved)
+        {
+            var vehicle = $"{WebUtility.HtmlEncode(appt.CustomerVehicle?.Brand)} {WebUtility.HtmlEncode(appt.CustomerVehicle?.Model)} ({WebUtility.HtmlEncode(appt.CustomerVehicle?.RegistrationNumber)})";
+
+            var statusText = approved ? "approved" : "rejected";
+            var headline = approved ? "Modification Request Approved" : "Modification Request Rejected";
+            var nextStep = approved
+                ? "We have scheduled your modification. You can view details and track progress from your dashboard."
+                : "If you have questions or would like to modify your request, please contact support or submit a new request.";
+
+            var sb = new StringBuilder();
+            sb.Append($@"<div style=""font-family:Segoe UI,Arial,sans-serif;font-size:14px;color:#222"">
+<h2>{headline}</h2>
+<p>Hi {WebUtility.HtmlEncode(appt.User?.FirstName ?? "Customer")},</p>
+<p>Your modification request has been <strong>{statusText}</strong>.</p>
+<ul>
+  <li><strong>Appointment #:</strong> {appt.AppointmentId}</li>
+  <li><strong>Date/Time:</strong> {appt.DateTime:yyyy-MM-dd HH:mm}</li>
+  <li><strong>Vehicle:</strong> {vehicle}</li>
+  <li><strong>Current Amount:</strong> LKR {appt.Amount:N2}</li>
+</ul>
+<p>{nextStep}</p>
 <p>Thank you for choosing AutoServe 360.</p>
 </div>");
             return sb.ToString();

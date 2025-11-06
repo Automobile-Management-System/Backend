@@ -11,10 +11,12 @@ namespace automobile_backend.Services
     public class ModificationRequestService : IModificationRequestService
     {
         private readonly IModificationRequestRepository _modificationRepository;
+        private readonly INotificationService _notifications;
 
-        public ModificationRequestService(IModificationRequestRepository modificationRepository)
+        public ModificationRequestService(IModificationRequestRepository modificationRepository, INotificationService notifications)
         {
             _modificationRepository = modificationRepository;
+            _notifications = notifications;
         }
 
         // Pagination support: returns data and total count
@@ -94,6 +96,15 @@ namespace automobile_backend.Services
         request.Appointment.Amount += reviewDto.EstimatedCost.Value;
 
     await _modificationRepository.UpdateAsync(request);
+
+    // 🔔 Send customer email based on the new status
+    var statusForEmail = request.Appointment.Status == AppointmentStatus.Upcoming
+        ? "Approved"
+        : request.Appointment.Status == AppointmentStatus.Rejected
+            ? "Rejected"
+            : request.Appointment.Status.ToString();
+
+    await _notifications.SendStatusUpdateAsync("Appointment", request.AppointmentId, statusForEmail);
 
     // ✅ Safely build response
     var assigneeNames = request.Appointment.EmployeeAppointments?
