@@ -16,64 +16,21 @@ namespace automobile_backend.Services
             _paymentRepository = paymentRepository;
         }
 
+        // --- MODIFIED: This is now a simple passthrough ---
         public async Task<IEnumerable<ServiceProgressDto>> GetEmployeeServiceProgressAsync(int employeeId)
         {
-            var appointments = await _repository.GetEmployeeAppointmentsAsync(employeeId);
-            var serviceProgressList = new List<ServiceProgressDto>();
-
-            foreach (var appointment in appointments)
-            {
-                var activeTimer = await GetActiveTimerAsync(appointment.AppointmentId, employeeId);
-                var totalTime = await GetTotalLoggedTimeAsync(appointment.AppointmentId);
-
-                var serviceProgress = new ServiceProgressDto
-                {
-                    AppointmentId = appointment.AppointmentId,
-                    CustomerName = appointment.User?.FirstName + " " + appointment.User?.LastName,
-                    CustomerVehicleName = appointment.CustomerVehicle?.Brand + " " + appointment.CustomerVehicle?.Model,
-                    Status = appointment.Status,
-                    ServiceType = appointment.Type,
-                    AppointmentDateTime = appointment.DateTime,
-                    IsTimerActive = activeTimer != null,
-                    CurrentTimerStartTime = activeTimer?.StartDateTime,
-                    TotalTimeLogged = totalTime,
-                    TimeLogs = appointment.TimeLogs?.Select(tl => new TimeLogDto
-                    {
-                        LogId = tl.LogId,
-                        StartDateTime = tl.StartDateTime,
-                        EndDateTime = tl.EndDateTime,
-                        HoursLogged = tl.HoursLogged,
-                        IsActive = tl.IsActive
-                    }).ToList() ?? new List<TimeLogDto>()
-                };
-
-                // Add specific service/modification details
-                if (appointment.Type == automobile_backend.Models.Entities.Type.Service)
-                {
-                    serviceProgress.ServiceNames = appointment.AppointmentServices?
-                        .Select(asv => asv.Service.ServiceName)
-                        .ToList() ?? new List<string>();
-                }
-                else if (appointment.Type == automobile_backend.Models.Entities.Type.Modifications)
-                {
-                    var modification = appointment.ModificationRequests?.FirstOrDefault();
-                    if (modification != null)
-                    {
-                        serviceProgress.ModificationTitle = modification.Title;
-                        serviceProgress.ModificationDescription = modification.Description;
-                    }
-                }
-
-                serviceProgressList.Add(serviceProgress);
-            }
-
-            return serviceProgressList;
+            // The repository now does all the heavy lifting! No more N+1 loops.
+            return await _repository.GetEmployeeServiceProgressAsync(employeeId);
         }
 
         public async Task<ServiceProgressDto?> GetServiceProgressByIdAsync(int appointmentId)
         {
             var appointment = await _repository.GetAppointmentWithDetailsAsync(appointmentId);
             if (appointment == null) return null;
+
+            // Note: We no longer need to get active timer or total time here,
+            // but GetAppointmentWithDetailsAsync is still used by other methods.
+            // We will build the DTO manually for this single case.
 
             var activeTimer = appointment.TimeLogs?.FirstOrDefault(tl => tl.IsActive);
             var totalTime = await GetTotalLoggedTimeAsync(appointmentId);
@@ -82,24 +39,17 @@ namespace automobile_backend.Services
             {
                 AppointmentId = appointment.AppointmentId,
                 CustomerName = appointment.User?.FirstName + " " + appointment.User?.LastName,
+                CustomerId = appointment.UserId,
                 CustomerVehicleName = appointment.CustomerVehicle?.Brand + " " + appointment.CustomerVehicle?.Model,
                 Status = appointment.Status,
                 ServiceType = appointment.Type,
                 AppointmentDateTime = appointment.DateTime,
                 IsTimerActive = activeTimer != null,
                 CurrentTimerStartTime = activeTimer?.StartDateTime,
-                TotalTimeLogged = totalTime,
-                TimeLogs = appointment.TimeLogs?.Select(tl => new TimeLogDto
-                {
-                    LogId = tl.LogId,
-                    StartDateTime = tl.StartDateTime,
-                    EndDateTime = tl.EndDateTime,
-                    HoursLogged = tl.HoursLogged,
-                    IsActive = tl.IsActive
-                }).ToList() ?? new List<TimeLogDto>()
+                TotalTimeLogged = totalTime
+                // TimeLogs list is no longer part of the DTO
             };
 
-            // Add specific service/modification details
             if (appointment.Type == automobile_backend.Models.Entities.Type.Service)
             {
                 serviceProgress.ServiceNames = appointment.AppointmentServices?
@@ -325,9 +275,6 @@ namespace automobile_backend.Services
         {
             return await _repository.GetTotalLoggedTimeAsync(appointmentId);
         }
-
-        // This private method is no longer needed as the logic is in the main methods
-        // private string GetServiceTitle(Appointment appointment) { ... }
 
         private async Task CreatePaymentRecordAsync(Appointment appointment)
         {

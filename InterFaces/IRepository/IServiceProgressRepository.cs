@@ -1,10 +1,13 @@
+using automobile_backend.Models.DTOs; // Import DTOs
 using automobile_backend.Models.Entities;
 
 namespace automobile_backend.InterFaces.IRepository
 {
     public interface IServiceProgressRepository
     {
-        Task<IEnumerable<Appointment>> GetEmployeeAppointmentsAsync(int employeeId);
+        // MODIFIED: This now returns the DTO directly
+        Task<IEnumerable<ServiceProgressDto>> GetEmployeeServiceProgressAsync(int employeeId);
+
         Task<Appointment?> GetAppointmentWithDetailsAsync(int appointmentId);
         Task<TimeLog?> GetActiveTimerAsync(int appointmentId, int userId);
         Task<IEnumerable<TimeLog>> GetTimeLogsByAppointmentAsync(int appointmentId);
