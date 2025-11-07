@@ -113,12 +113,12 @@ dotnet ef database update
 ```sh
 dotnet run
 ```
-The API will start and be accessible at `https://localhost:7125` or `http://localhost:5125`.
+The API will start and be accessible at `https://localhost:7125` or `http://localhost:5001`.
 
 ## API Documentation
 
 Once the application is running, you can explore and test all the API endpoints using the interactive Swagger UI, available at:
-**`https://localhost:7125/swagger`**
+**`https://localhost:5001/swagger`**
 
 ## Real-time Notifications
 
@@ -135,7 +135,7 @@ docker build -t autoserve-backend .
 ### Run the Docker Container
 You must provide the configuration as environment variables.
 ```sh
-docker run -d -p 8080:8080 \
+docker run -d -p 5001:5001 \
   -e ConnectionStrings:DefaultConnection="..." \
   -e Jwt:Key="..." \
   -e Jwt:Issuer="..." \
@@ -146,4 +146,4 @@ docker run -d -p 8080:8080 \
   -e Gemini:ApiKey="..." \
   --name autoserve-app autoserve-backend
 ```
-The application will be accessible at `http://localhost:8080`.
+The application will be accessible at `http://localhost:5001`.
