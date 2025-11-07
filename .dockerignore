@@ -1,0 +1,14 @@
+**/.dockerignore
+**/.env
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/*.*proj.user
+**/bin
+**/obj
+**/Dockerfile
+**/Dockerfile.develop
+**/docker-compose.yml
+**/docker-compose.vs.debug.g.yml
+**/docker-compose.vs.release.g.yml
