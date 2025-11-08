@@ -9,7 +9,7 @@ using Stripe.Checkout;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using automobile_backend.Models.Entities; // <-- THE CRITICAL FIX IS HERE
+using automobile_backend.Models.Entities;
 
 namespace automobile_backend.Services
 {
@@ -29,16 +29,22 @@ namespace automobile_backend.Services
             _cloudStorageService = cloudStorageService; 
         }
 
+        // --- THIS METHOD IS UPDATED ---
         public async Task<IEnumerable<InvoiceDto>> GetPaymentsForUserAsync(int userId)
         {
-            var payments = await _paymentRepository.GetPaymentsForUserAsync(userId);
+            // This now returns payments with the extra related data
+            var payments = await _paymentRepository.GetPaymentsForUserAsync(userId); 
 
-            // This DTO mapping correctly handles the status
             return payments.Select(p => new InvoiceDto
             {
                 AppointmentId = p.AppointmentId,
                 InvoiceNumber = $"INV-{p.PaymentId:D5}",
-                ServiceName = $"Appointment - {p.Appointment.Type}", 
+                
+                // --- THIS IS THE CHANGE ---
+                // We now call our helper function to get the real name(s)
+                ServiceName = GetServiceDescription(p.Appointment),
+                // --- END CHANGE ---
+                
                 Status = p.Status == PaymentStatus.Completed ? "paid" : "pending",
                 Amount = p.Amount,
                 Date = p.Appointment.DateTime, 
@@ -47,6 +53,37 @@ namespace automobile_backend.Services
                 InvoiceLink = p.InvoiceLink 
             });
         }
+        
+        // --- NEW HELPER METHOD ---
+        // This logic builds the service name based on the data we fetched
+        private string GetServiceDescription(Appointment appointment)
+        {
+            // Check if it's a Service appointment
+            if (appointment.Type == Models.Entities.Type.Service)
+            {
+                if (appointment.AppointmentServices != null && appointment.AppointmentServices.Any())
+                {
+                    // Join all linked service names, e.g., "Oil Change, Tire Rotation"
+                    return string.Join(", ", appointment.AppointmentServices.Select(aps => aps.Service?.ServiceName ?? "Service"));
+                }
+                return "General Service"; // Fallback
+            }
+
+            // Check if it's a Modification appointment
+            if (appointment.Type == Models.Entities.Type.Modifications)
+            {
+                if (appointment.ModificationRequests != null && appointment.ModificationRequests.Any())
+                {
+                    // Use the title of the first modification request
+                    return appointment.ModificationRequests.First().Title;
+                }
+                return "Modification Request"; // Fallback
+            }
+
+            return "Unknown Service";
+        }
+        // --- END NEW HELPER METHOD ---
+
         
         public async Task<string> CreateCheckoutSessionAsync(int appointmentId, int userId)
         {
@@ -63,6 +100,11 @@ namespace automobile_backend.Services
             var successUrl = $"{clientBaseUrl}/customer/payments?status=success";
             var cancelUrl = $"{clientBaseUrl}/customer/payments"; 
 
+            // --- THIS IS THE CHANGE ---
+            // Get the detailed service name for the Stripe page
+            var serviceDescription = GetServiceDescription(payment.Appointment);
+            // --- END CHANGE ---
+
             var options = new SessionCreateOptions
             {
                 PaymentMethodTypes = new List<string> { "card" },
@@ -76,8 +118,11 @@ namespace automobile_backend.Services
                             UnitAmount = (long)(payment.Amount * 100), 
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
-                                Name = $"Payment for Appointment #{payment.AppointmentId}",
-                                Description = $"Service/Modification: {payment.Appointment.Type}"
+                                // --- THIS IS THE CHANGE ---
+                                // Use the detailed name on the Stripe checkout page
+                                Name = serviceDescription,
+                                Description = $"Payment for Appointment #{payment.AppointmentId}"
+                                // --- END CHANGE ---
                             }
                         },
                         Quantity = 1
@@ -99,7 +144,6 @@ namespace automobile_backend.Services
             return session.Url; 
         }
 
-        // This method updates the status in the database
         public async Task HandleStripeWebhookAsync(string json, string? stripeSignature)
         {
             var webhookSecret = _configuration["Stripe:WebhookSecret"];
@@ -122,30 +166,40 @@ namespace automobile_backend.Services
                         session.Metadata.TryGetValue("appointmentId", out var appointmentIdStr);
                         if (int.TryParse(appointmentIdStr, out int appointmentId))
                         {
-                            var payment = await _paymentRepository.GetByAppointmentIdAsync(appointmentId);
-                            if (payment != null && payment.Status != PaymentStatus.Completed)
+                            // We must use GetByAppointmentIdAsync here, as GetPaymentsForUserAsync needs a user ID
+                            // But we need to fetch the *full* data for the PDF
+                            // Let's create a new repo method or modify GetByAppointmentIdAsync
+                            
+                            // For simplicity, let's update GetByAppointmentIdAsync to fetch everything needed for the PDF
+                            // (We already modified the other one, let's update this one too)
+                            // **UPDATE: GetByAppointmentIdAsync in your repo MUST also be updated**
+                            
+                            var payment = await _paymentRepository.GetByAppointmentIdAsync(appointmentId); // <-- This needs to be the full data
+                            
+                            if (payment == null)
                             {
-                                // 1. Update Payment Status to Completed (uses the Enum)
+                                 Console.WriteLine($"Webhook error: Payment for appointment {appointmentId} not found.");
+                                 return; // Stop processing
+                            }
+
+                            if (payment.Status != PaymentStatus.Completed)
+                            {
                                 payment.Status = PaymentStatus.Completed; 
-                                payment.PaymentMethod = automobile_backend.Models.Entities.PaymentMethod.CreditCard; 
+                                payment.PaymentMethod = Models.Entities.PaymentMethod.CreditCard; 
                                 payment.PaymentDateTime = DateTime.UtcNow;
 
-                                // 2. Generate PDF
                                 var document = new InvoiceDocument(payment);
                                 byte[] pdfBytes = document.GeneratePdf();
                                 string fileName = $"invoices/INV-{payment.PaymentId:D5}.pdf";
 
-                                // 3. Upload to Firebase Storage
                                 string downloadUrl = await _cloudStorageService.UploadFileAsync(
                                     pdfBytes, 
                                     fileName, 
                                     "application/pdf"
                                 );
 
-                                // 4. Save the public URL
                                 payment.InvoiceLink = downloadUrl;
                                 
-                                // 5. Update database with all changes
                                 await _paymentRepository.UpdateAsync(payment);
                             }
                         }
@@ -154,13 +208,11 @@ namespace automobile_backend.Services
             }
             catch (StripeException ex)
             {
-                // Check backend console for these errors
                 Console.WriteLine($"Stripe webhook signature/event error: {ex.Message}"); 
                 throw;
             }
             catch (Exception ex)
             {
-                // Check backend console for PDF/Firebase errors
                 Console.WriteLine($"Error processing webhook (PDF/Firebase?): {ex.Message}");
                 throw;
             }
