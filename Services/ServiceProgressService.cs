@@ -9,11 +9,16 @@ namespace automobile_backend.Services
     {
         private readonly IServiceProgressRepository _repository;
         private readonly IPaymentRepository _paymentRepository;
+        private readonly INotificationService _notifications; // NEW
 
-        public ServiceProgressService(IServiceProgressRepository repository, IPaymentRepository paymentRepository)
+        public ServiceProgressService(
+            IServiceProgressRepository repository,
+            IPaymentRepository paymentRepository,
+            INotificationService notifications) // NEW
         {
             _repository = repository;
             _paymentRepository = paymentRepository;
+            _notifications = notifications; // NEW
         }
 
         // --- MODIFIED: This is now a simple passthrough ---
@@ -191,6 +196,9 @@ namespace automobile_backend.Services
                     appointment.EndDateTime = DateTime.UtcNow;
                     await _repository.UpdateAppointmentAsync(appointment);
                     await CreatePaymentRecordAsync(appointment);
+
+                    // NEW: send completion email
+                    await TrySendCompletionEmailAsync(appointment.AppointmentId);
                 }
 
                 var totalTime = await GetTotalLoggedTimeAsync(timerAction.AppointmentId);
@@ -245,6 +253,9 @@ namespace automobile_backend.Services
                     }
 
                     await CreatePaymentRecordAsync(appointment);
+
+                    // NEW: send completion email
+                    await TrySendCompletionEmailAsync(appointment.AppointmentId);
                 }
 
                 await _repository.UpdateAppointmentAsync(appointment);
@@ -281,10 +292,7 @@ namespace automobile_backend.Services
             try
             {
                 var existingPayment = await _paymentRepository.GetByAppointmentIdAsync(appointment.AppointmentId);
-                if (existingPayment != null)
-                {
-                    return;
-                }
+                if (existingPayment != null) return;
 
                 var payment = new Payment
                 {
@@ -301,6 +309,19 @@ namespace automobile_backend.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error creating payment record: {ex.Message}");
+            }
+        }
+
+        // NEW helper
+        private async Task TrySendCompletionEmailAsync(int appointmentId)
+        {
+            try
+            {
+                await _notifications.SendStatusUpdateAsync("Appointment", appointmentId, "Completed");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed sending completion email for appointment {appointmentId}: {ex.Message}");
             }
         }
     }
