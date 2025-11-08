@@ -20,6 +20,8 @@ namespace automobile_backend.InterFaces.IRepository
         Task<Payment?> GetPaymentForInvoiceAsync(int paymentId);
 
         // NEW - Create a new payment record
+
+        // This code create Eshan
         Task<Payment> CreateAsync(Payment payment);
     }
 }

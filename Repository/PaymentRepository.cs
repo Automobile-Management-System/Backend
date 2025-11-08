@@ -22,7 +22,7 @@ namespace automobile_backend.Repository
         {
             return await _context.Payments
                 .Include(p => p.Appointment)
-                    .ThenInclude(a => a.User) 
+                    .ThenInclude(a => a.User)
                 .FirstOrDefaultAsync(p => p.AppointmentId == appointmentId);
         }
 
@@ -52,9 +52,14 @@ namespace automobile_backend.Repository
             throw new NotImplementedException();
         }
 
-        public Task<Payment> CreateAsync(Payment payment)
+
+
+        // This code create Eshan
+        public async Task<Payment> CreateAsync(Payment payment)
         {
-            throw new NotImplementedException();
+            _context.Payments.Add(payment);
+            await _context.SaveChangesAsync();
+            return payment;
         }
     }
 }
