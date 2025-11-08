@@ -18,12 +18,11 @@ namespace automobile_backend.Repository
             return await _context.Payments.ToListAsync();
         }
 
-        // UPDATED - Eagerly loads Appointment and User for validation
         public async Task<Payment?> GetByAppointmentIdAsync(int appointmentId)
         {
             return await _context.Payments
                 .Include(p => p.Appointment)
-                    .ThenInclude(a => a.User) // Include User for email
+                    .ThenInclude(a => a.User) 
                 .FirstOrDefaultAsync(p => p.AppointmentId == appointmentId);
         }
 
@@ -34,31 +33,28 @@ namespace automobile_backend.Repository
             return payment;
         }
 
-        // NEW - Implementation for getting user-specific payments
+        // --- THIS METHOD IS UPDATED ---
         public async Task<IEnumerable<Payment>> GetPaymentsForUserAsync(int userId)
         {
             return await _context.Payments
-                .Include(p => p.Appointment) // Include Appointment details
+                .Include(p => p.Appointment) // Get the appointment
+                    .ThenInclude(a => a.AppointmentServices) // THEN Include the join table
+                    .ThenInclude(aps => aps.Service)         // THEN Include the Service from the join table
+                .Include(p => p.Appointment) // Get the appointment again
+                    .ThenInclude(a => a.ModificationRequests) // THEN Include its modification requests
                 .Where(p => p.Appointment.UserId == userId)
                 .OrderByDescending(p => p.Appointment.DateTime)
                 .ToListAsync();
         }
 
-        public async Task<Payment?> GetPaymentForInvoiceAsync(int paymentId)
+        public Task<Payment?> GetPaymentForInvoiceAsync(int paymentId)
         {
-            // Eagerly load the data needed by your InvoiceDocument template
-            return await _context.Payments
-                .Include(p => p.Appointment)
-                    .ThenInclude(a => a.User)
-                .FirstOrDefaultAsync(p => p.PaymentId == paymentId);
+            throw new NotImplementedException();
         }
 
-        // NEW - Implementation for creating a new payment record
-        public async Task<Payment> CreateAsync(Payment payment)
+        public Task<Payment> CreateAsync(Payment payment)
         {
-            _context.Payments.Add(payment);
-            await _context.SaveChangesAsync();
-            return payment;
+            throw new NotImplementedException();
         }
     }
 }
