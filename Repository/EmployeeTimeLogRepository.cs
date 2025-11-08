@@ -15,10 +15,10 @@ namespace automobile_backend.Repository
         }
 
         public async Task<PaginatedResponse<EmployeeTimeLogDTO>> GetEmployeeLogsAsync(
-            int employeeId,
-            int pageNumber,
-            int pageSize,
-            string? search)
+     int employeeId,
+     int pageNumber,
+     int pageSize,
+     string? search)
         {
             var query = _context.TimeLogs
                 .Where(t => t.UserId == employeeId && t.EndDateTime != null)
@@ -31,7 +31,7 @@ namespace automobile_backend.Repository
                 .Include(t => t.Appointment.ModificationRequests)
                 .AsQueryable();
 
-            // ✅ Search filter (customer name, vehicle reg, service name, modification title)
+            // Search Filter
             if (!string.IsNullOrWhiteSpace(search))
             {
                 string s = search.ToLower();
@@ -44,31 +44,47 @@ namespace automobile_backend.Repository
                 );
             }
 
-            var totalCount = await query.CountAsync();
+            // Group all timelogs of same appointment
+            var groupedQuery = query
+                .GroupBy(t => new
+                {
+                    t.AppointmentId,
+                    CustomerName = t.Appointment.User.FirstName + " " + t.Appointment.User.LastName,
+                    VehicleReg = t.Appointment.CustomerVehicle.RegistrationNumber
+                });
 
-            var logs = await query
-                .OrderByDescending(t => t.CreatedAt)
+            var totalCount = await groupedQuery.CountAsync();
+
+            var logs = await groupedQuery
+                .Select(g => new EmployeeTimeLogDTO
+                {
+                    LogId = g.First().LogId,
+
+                    CustomerName = g.Key.CustomerName,
+                    VehicleRegNumber = g.Key.VehicleReg,
+
+                    // earliest and latest
+                    StartDateTime = g.Min(x => x.StartDateTime),
+                    EndDateTime = g.Max(x => x.EndDateTime),
+
+                    // sum hours
+                    HoursLogged = g.Sum(x => x.HoursLogged),
+
+                    CompletedServices = g.First().Appointment.Status == AppointmentStatus.Completed
+                        ? g.First().Appointment.AppointmentServices
+                            .Select(aps => aps.Service.ServiceName)
+                            .ToList()
+                        : new List<string>(),
+
+                    CompletedModifications = g.First().Appointment.Status == AppointmentStatus.Completed
+                        ? g.First().Appointment.ModificationRequests
+                            .Select(m => m.Title)
+                            .ToList()
+                        : new List<string>()
+                })
+                .OrderByDescending(x => x.StartDateTime)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .Select(t => new EmployeeTimeLogDTO
-                {
-                    LogId = t.LogId,
-                    CustomerName = t.Appointment.User.FirstName + " " + t.Appointment.User.LastName,
-                    VehicleRegNumber = t.Appointment.CustomerVehicle.RegistrationNumber,
-                    StartDateTime = t.StartDateTime,
-                    EndDateTime = t.EndDateTime,
-                    HoursLogged = t.HoursLogged,
-                    CompletedServices = t.Appointment.Status == AppointmentStatus.Completed
-                    ? t.Appointment.AppointmentServices
-                        .Select(aps => aps.Service.ServiceName)
-                        .ToList()
-                        : null,
-                    CompletedModifications = t.Appointment.Status == AppointmentStatus.Completed
-    ? t.Appointment.ModificationRequests
-        .Select(m => m.Title)
-        .ToList()
-    : null
-                })
                 .ToListAsync();
 
             return new PaginatedResponse<EmployeeTimeLogDTO>
@@ -79,5 +95,6 @@ namespace automobile_backend.Repository
                 PageSize = pageSize
             };
         }
+
     }
 }
