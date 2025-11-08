@@ -23,6 +23,7 @@ namespace automobile_backend.Controllers
             _appointmentService = appointmentService;
         }
 
+        //Retrieves all appointments in the system
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -47,6 +48,7 @@ namespace automobile_backend.Controllers
             return Ok(appointmentDtos);
         }
 
+        //Gets available time slots for appointments on a specific date
         [HttpGet("availability")]
         public async Task<IActionResult> GetAvailability([FromQuery] DateTime date)
         {
@@ -56,6 +58,7 @@ namespace automobile_backend.Controllers
             return Ok(availability);
         }
 
+        //Retrieves all appointments for the currently logged-in user
         [HttpGet("my-appointments")]
         [Authorize]
         public async Task<IActionResult> GetMyAppointments()
@@ -90,6 +93,7 @@ namespace automobile_backend.Controllers
             return Ok(appointmentDtos);
         }
 
+        //Creates a new service appointment for the logged-in user
         [HttpPost("create")]
         [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateServiceAppointmentDto dto)
@@ -130,6 +134,7 @@ namespace automobile_backend.Controllers
             }
         }
 
+        //Retrieves paginated appointments for the logged-in user with optional status filtering
         [HttpGet("fliter")]
         [Authorize]
         public async Task<IActionResult> GetPaginated(
