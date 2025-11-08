@@ -2,6 +2,7 @@ using automobile_backend.Models.Entities;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using System.Linq; // <-- 1. ADD THIS using directive
 
 namespace automobile_backend.Services.InvoiceTemplates
 {
@@ -92,13 +93,14 @@ namespace automobile_backend.Services.InvoiceTemplates
                 // Total
                 column.Item().AlignRight().PaddingTop(10).Text($"Total: LKR{_payment.Amount:F2}")
                     .SemiBold().FontSize(16);
-                
+
                 // Status
                 column.Item().AlignRight().Text($"Status: {_payment.Status}")
                     .FontColor(Colors.Green.Medium).SemiBold();
             });
         }
 
+        // --- 2. THIS METHOD IS NOW UPDATED ---
         void ComposeTable(IContainer container)
         {
             container.Table(table =>
@@ -121,11 +123,43 @@ namespace automobile_backend.Services.InvoiceTemplates
                     header.Cell().Background(Colors.Grey.Lighten3).Padding(5).AlignRight().Text("Total").SemiBold();
                 });
 
+                // --- START OF FIX ---
                 // Item Row
-                var serviceType = _payment.Appointment.Type.ToString();
+                var appointment = _payment.Appointment;
                 var amount = _payment.Amount;
+                string serviceDescription = "N/A"; // Default fallback
 
-                table.Cell().Padding(5).Text($"Appointment: {serviceType}");
+                // Logic for Service
+                if (appointment.Type == Models.Entities.Type.Service)
+                {
+                    if (appointment.AppointmentServices != null && appointment.AppointmentServices.Any())
+                    {
+                        // Join all service names, e.g., "Oil Change, Tire Rotation"
+                        serviceDescription = string.Join(", ", appointment.AppointmentServices.Select(aps => aps.Service?.ServiceName ?? "Service"));
+                    }
+                    else
+                    {
+                        serviceDescription = "General Service"; // Fallback if no services are linked
+                    }
+                }
+                // Logic for Modifications
+                else if (appointment.Type == Models.Entities.Type.Modifications)
+                {
+                    if (appointment.ModificationRequests != null && appointment.ModificationRequests.Any())
+                    {
+                        // Use the title of the first modification request
+                        serviceDescription = appointment.ModificationRequests.First().Title ?? "Modification";
+                    }
+                    else
+                    {
+                        serviceDescription = "Modification Request"; // Fallback
+                    }
+                }
+
+                // Now use this `serviceDescription` in the table cell
+                table.Cell().Padding(5).Text(serviceDescription);
+                // --- END OF FIX ---
+
                 table.Cell().Padding(5).AlignRight().Text($"LKR{amount:F2}");
                 table.Cell().Padding(5).AlignCenter().Text("1");
                 table.Cell().Padding(5).AlignRight().Text($"LKR{amount:F2}");

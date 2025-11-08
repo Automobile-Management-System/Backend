@@ -18,11 +18,20 @@ namespace automobile_backend.Repository
             return await _context.Payments.ToListAsync();
         }
 
+
+        // --- THIS METHOD IS UPDATED ---
         public async Task<Payment?> GetByAppointmentIdAsync(int appointmentId)
         {
             return await _context.Payments
                 .Include(p => p.Appointment)
                     .ThenInclude(a => a.User)
+                // --- ADD THESE INCLUDES ---
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.AppointmentServices)
+                    .ThenInclude(aps => aps.Service)
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.ModificationRequests)
+                // --- END OF ADDITIONS ---
                 .FirstOrDefaultAsync(p => p.AppointmentId == appointmentId);
         }
 
@@ -33,7 +42,7 @@ namespace automobile_backend.Repository
             return payment;
         }
 
-        // --- THIS METHOD IS UPDATED ---
+        
         public async Task<IEnumerable<Payment>> GetPaymentsForUserAsync(int userId)
         {
             return await _context.Payments
@@ -47,14 +56,24 @@ namespace automobile_backend.Repository
                 .ToListAsync();
         }
 
-        public Task<Payment?> GetPaymentForInvoiceAsync(int paymentId)
+
+        //  Eshan
+        public async Task<Payment?> GetPaymentForInvoiceAsync(int paymentId)
         {
-            throw new NotImplementedException();
+            return await _context.Payments
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.User)
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.AppointmentServices)
+                    .ThenInclude(aps => aps.Service)
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.ModificationRequests)
+                .FirstOrDefaultAsync(p => p.PaymentId == paymentId);
         }
 
 
 
-        // This code create Eshan
+        //  Eshan
         public async Task<Payment> CreateAsync(Payment payment)
         {
             _context.Payments.Add(payment);

@@ -6,6 +6,7 @@ using Stripe;
 using System.IO;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace automobile_backend.Controllers
 {
@@ -18,11 +19,14 @@ namespace automobile_backend.Controllers
         // --- NEW ---
         private readonly IInvoiceService _invoiceService;
 
+        private readonly ILogger<PaymentController> _logger;
+
         // --- UPDATED ---
-        public PaymentController(IPaymentService paymentService, IInvoiceService invoiceService)
+        public PaymentController(IPaymentService paymentService, IInvoiceService invoiceService, ILogger<PaymentController> logger  )
         {
             _paymentService = paymentService;
             _invoiceService = invoiceService; // Inject new service
+            _logger = logger;
         }
 
         // GET /api/payments
@@ -76,7 +80,7 @@ namespace automobile_backend.Controllers
         // This endpoint is called BY STRIPE, not your frontend.
         // It must be publicly accessible.
         [HttpPost("webhook")]
-        [AllowAnonymous] // Remove authorization for the webhook
+        [AllowAnonymous]
         public async Task<IActionResult> StripeWebhook()
         {
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
@@ -89,11 +93,14 @@ namespace automobile_backend.Controllers
             }
             catch (StripeException ex)
             {
+                _logger.LogWarning(ex, "Stripe signature error: {ErrorMessage}", ex.Message); // <-- 5. ADD LOG
                 return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                // --- 6. THIS WILL SHOW THE REAL ERROR ---
+                _logger.LogError(ex, "Webhook processing failed: {ErrorMessage}", ex.Message);
+                return BadRequest(new { message = $"Internal error: {ex.Message}" });
             }
         }
 
