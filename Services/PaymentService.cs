@@ -155,7 +155,7 @@ namespace automobile_backend.Services
 
             try
             {
-                var stripeEvent = EventUtility.ConstructEvent(json, stripeSignature, webhookSecret);
+                var stripeEvent = EventUtility.ConstructEvent(json, stripeSignature, webhookSecret, throwOnApiVersionMismatch: false);
 
                 if (stripeEvent.Type == "checkout.session.completed")
                 {

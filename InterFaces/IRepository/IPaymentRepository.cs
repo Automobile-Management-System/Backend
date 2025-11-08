@@ -17,9 +17,11 @@ namespace automobile_backend.InterFaces.IRepository
         // NEW - Gets all payments (with Appointment details) for a specific user ID
         Task<IEnumerable<Payment>> GetPaymentsForUserAsync(int userId);
 
+
+        // Eshan
         Task<Payment?> GetPaymentForInvoiceAsync(int paymentId);
 
-        // NEW - Create a new payment record
+        // Eshan
         Task<Payment> CreateAsync(Payment payment);
     }
 }

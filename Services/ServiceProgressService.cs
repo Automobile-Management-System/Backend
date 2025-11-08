@@ -300,7 +300,7 @@ namespace automobile_backend.Services
                     Amount = appointment.Amount,
                     Status = PaymentStatus.Pending,
                     PaymentMethod = PaymentMethod.CreditCard,
-                    PaymentDateTime = appointment.DateTime,
+                    PaymentDateTime = DateTime.UtcNow,
                     InvoiceLink = null
                 };
 
