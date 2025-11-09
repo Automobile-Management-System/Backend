@@ -9,6 +9,7 @@ public class ReviewRequestDto
     public string Action { get; set; } = string.Empty; // "approve" or "reject"
     public decimal? EstimatedCost { get; set; }
     public int? AssigneeId { get; set; } // Employee to assign for pending requests
+    public object RespondedBy { get; internal set; }
 }
 
 
