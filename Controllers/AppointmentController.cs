@@ -151,7 +151,11 @@ namespace automobile_backend.Controllers
             var result = await _appointmentService
                 .GetPaginatedAppointmentsAsync(userId, pageNumber, pageSize, status);
 
-            var appointmentDtos = result.Data.Select(a => new AppointmentResponseDto
+            var filteredData = result.Data
+               .Where(a => a.AppointmentServices != null && a.AppointmentServices.Any())
+               .ToList();
+
+            var appointmentDtos = filteredData.Select(a => new AppointmentResponseDto
             {
                 AppointmentId = a.AppointmentId,
                 DateTime = a.DateTime,
@@ -170,10 +174,11 @@ namespace automobile_backend.Controllers
             return Ok(new PaginatedResponse<AppointmentResponseDto>
             {
                 Data = appointmentDtos,
-                TotalCount = result.TotalCount,
+                TotalCount = filteredData.Count,
                 PageNumber = result.PageNumber,
                 PageSize = result.PageSize
             });
+
         }
 
 
