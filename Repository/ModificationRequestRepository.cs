@@ -1,4 +1,5 @@
 using automobile_backend.InterFaces.IRepository;
+using automobile_backend.Models.DTOs;
 using automobile_backend.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -16,7 +17,12 @@ namespace automobile_backend.Repository
             _context = context;
         }
 
-      public async Task<IEnumerable<ModificationRequest>> GetAllAsync()
+        public Task AddAsync(CreateModificationRequestDto dto)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<ModificationRequest>> GetAllAsync()
 {
     return await _context.ModificationRequests
         .Include(m => m.Appointment)
